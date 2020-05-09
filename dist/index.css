@@ -1,0 +1,52 @@
+body {
+    background-color: rgb(24,24,24);
+    color: aliceblue;
+    text-align: center;
+    margin: 0%;
+}
+
+.top_title {
+    margin-top: 20px;
+}
+
+#mirroring_start_button {
+    padding-right: 19px;
+}
+
+#mirroring_stop_button {
+    padding-left: 19px;
+}
+
+.configuration_section {
+    border: white;
+    border-width: 0.5px;
+    border-radius: 3%;
+    border-style: solid;
+    margin: 10px;
+    font-size: small;
+}
+
+.configuratin_item_label {
+    margin-bottom: 10px;
+}
+
+.configuration_item {
+    margin: 10px;
+}
+
+.slider_item {
+    display: flex;
+}
+
+.slider {
+    flex: 2;
+    height: 10px;
+}
+
+.slider_value {
+    flex: 1;
+}
+  
+hr {
+    height: 0.5px;
+}
