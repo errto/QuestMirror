@@ -11,6 +11,9 @@ This app calls scrcpy from Electron for easy mirroring by kids and anyone.
 # Installation
 
 It is better to use the pre-built package of links for easier execution.
+Unzip the zip file and click **QuestMirror.exe** in the unzipped folder.
+
+Pre-build: Prearing. 
 
 ## Build 
 
@@ -75,7 +78,7 @@ If you want to record the mirroring, check it and specify the folder to save the
 # Licences
 
 * scrcpy
-https://github.com/Genymobile/scrcpy
+https://github.com/Genymobile/scrcpy  
 Apache License 2.0(http://www.apache.org/licenses/LICENSE-2.0)
 
 * LoadinSpinner
