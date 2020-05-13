@@ -13,7 +13,7 @@ This app calls scrcpy from Electron for easy mirroring by kids and anyone.
 It is better to use the pre-built package of links for easier execution.
 Unzip the zip file and click **QuestMirror.exe** in the unzipped folder.
 
-Pre-build: Prearing. 
+Pre-build: https://github.com/r-asada-ab/QuestMirror/releases/download/v1.0.0/quest-mirror-win32-x64.zip
 
 ## Build 
 
