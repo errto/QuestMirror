@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var ExecController_1 = __importDefault(require("./ExecController"));
 var Spiner_1 = __importDefault(require("./Spiner"));
+var Timer_1 = __importDefault(require("./base/Timer"));
 // UIを管理するControllerクラス
 var UIContoller = /** @class */ (function () {
     // コンストラクタ
@@ -22,6 +23,8 @@ var UIContoller = /** @class */ (function () {
         this.cropCheckbox = document.getElementById("crop_checkbox");
         this.cropRightCheckbox = document.getElementById("crop_right_checkbox");
         this.cropLeftCheckbox = document.getElementById("crop_left_checkbox");
+        this.mirroringTimeLabel = document.getElementById("mirroring_time");
+        this.timer = null;
         this.indicator = new Spiner_1.default();
         this.indicator.hide();
     }
@@ -51,12 +54,17 @@ var UIContoller = /** @class */ (function () {
                     instance.startMirroring();
                     var img = document.getElementById("mirroring_start_image");
                     img.src = "./resources/icon/ico_play_active.png";
+                    _this.timer = new Timer_1.default();
+                    _this.timer.setEventListener(_this);
+                    _this.timer.start();
                 }
             }
         });
         this.endMirroringButton.addEventListener("click", function () {
+            var _a;
             var instance = ExecController_1.default.getInstance();
             instance.stopMirroring();
+            (_a = _this.timer) === null || _a === void 0 ? void 0 : _a.stop();
         });
         this.endMirroringButton.addEventListener("mouseover", function () {
             var instance = ExecController_1.default.getInstance();
@@ -197,6 +205,30 @@ var UIContoller = /** @class */ (function () {
         imgStart.src = "./resources/icon/ico_play.png";
         // ダイアログを表示するよう通知する
         electron_1.ipcRenderer.send('device_disconected');
+    };
+    // タイマーが開始したとき
+    UIContoller.prototype.onStartTimer = function () {
+        var _a;
+        if (this.timer) {
+            var time = (_a = this.timer) === null || _a === void 0 ? void 0 : _a.toString();
+            this.mirroringTimeLabel.innerText = time;
+        }
+    };
+    // タイマーが進んだとき
+    UIContoller.prototype.onTimerClocked = function () {
+        var _a;
+        if (this.timer) {
+            var time = (_a = this.timer) === null || _a === void 0 ? void 0 : _a.toString();
+            this.mirroringTimeLabel.innerText = time;
+        }
+    };
+    // タイマーが停止したとき
+    UIContoller.prototype.onEndTimer = function () {
+        var _a;
+        if (this.timer) {
+            var time = (_a = this.timer) === null || _a === void 0 ? void 0 : _a.toString();
+            this.mirroringTimeLabel.innerText = time;
+        }
     };
     // キャプチャが有効か
     UIContoller.prototype.isCaptureEnable = function () {

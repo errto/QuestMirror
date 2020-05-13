@@ -2,9 +2,11 @@ import { ipcRenderer } from 'electron'
 import ExecController from "./ExecController";
 import ExecControllerListener from './ExecControllerListener';
 import Spinner from './Spiner';
+import Timer from './base/Timer';
+import TimerEventListener from './base/TimerEventListener';
 
 // UIを管理するControllerクラス
-export default class UIContoller implements ExecControllerListener {
+export default class UIContoller implements ExecControllerListener, TimerEventListener {
 
     // ミラーリングを開始ボタン
     private startMirroringButton: HTMLButtonElement;
@@ -32,6 +34,10 @@ export default class UIContoller implements ExecControllerListener {
     private cropLeftCheckbox: HTMLInputElement;
     // ウェイトインディケーター
     private indicator: Spinner;
+    // ミラーリング時間を表示する要素
+    private mirroringTimeLabel: HTMLElement;
+    // タイマー
+    private timer: Timer | null;
 
     // コンストラクタ
     constructor() {
@@ -47,6 +53,8 @@ export default class UIContoller implements ExecControllerListener {
         this.cropCheckbox = <HTMLInputElement>document.getElementById("crop_checkbox");
         this.cropRightCheckbox = <HTMLInputElement>document.getElementById("crop_right_checkbox");
         this.cropLeftCheckbox = <HTMLInputElement>document.getElementById("crop_left_checkbox");
+        this.mirroringTimeLabel = <HTMLElement>document.getElementById("mirroring_time");
+        this.timer = null;
         this.indicator = new Spinner();
         this.indicator.hide();
     }
@@ -64,23 +72,18 @@ export default class UIContoller implements ExecControllerListener {
             if (!instance.getIsMirroring()) { // 再生していないとき
                 if (this.isCaptureEnable()) {
                     if (this.isCaptureDirectroySelected()) {
-                        instance.startMirroring();
-                        let img = <HTMLImageElement>document.getElementById("mirroring_start_image");
-                        img.src = "./resources/icon/ico_play_active.png";   
+                        this.startMirroring();
                     } else {
                         ipcRenderer.send('no_capture_directory_is_selected');
                     }
                 } else {
-                    instance.startMirroring();
-                    let img = <HTMLImageElement>document.getElementById("mirroring_start_image");
-                    img.src = "./resources/icon/ico_play_active.png";
+                    this.startMirroring();
                 }
             }
         })
 
         this.endMirroringButton.addEventListener("click", () => {
-            let instance = ExecController.getInstance();
-            instance.stopMirroring();
+            this.sropMirroring();
         })
 
         this.endMirroringButton.addEventListener("mouseover", () => {
@@ -237,6 +240,31 @@ export default class UIContoller implements ExecControllerListener {
         ipcRenderer.send('device_disconected');
     }
 
+    // タイマーが開始したとき
+    onStartTimer(): void {
+        if (this.timer) {
+            let time = this.timer?.toString();
+            this.mirroringTimeLabel.innerText = time
+        }
+    }
+
+    // タイマーが進んだとき
+    onTimerClocked(): void {
+        if (this.timer) {
+            let time = this.timer?.toString();
+            this.mirroringTimeLabel.innerText = time
+        }
+    }
+
+    // タイマーが停止したとき
+    onEndTimer(): void {
+        if (this.timer) {
+            let time = this.timer?.toString();
+            this.mirroringTimeLabel.innerText = time
+            this.timer = null;
+        }
+    }
+
     // キャプチャが有効か
     private isCaptureEnable(): boolean {
         return this.captureCheckbox.checked
@@ -246,5 +274,23 @@ export default class UIContoller implements ExecControllerListener {
     private isCaptureDirectroySelected(): boolean {
         console.log(this.directorySelectButton.innerText);
         return this.directorySelectButton.innerText　!= "No Directory Selected"
+    }
+
+    // ミラーリングを開始する
+    private startMirroring(): void {
+        let instance = ExecController.getInstance();
+        instance.startMirroring();
+        let img = <HTMLImageElement>document.getElementById("mirroring_start_image");
+        img.src = "./resources/icon/ico_play_active.png";
+        this.timer = new Timer();
+        this.timer.setEventListener(this);
+        this.timer.start();
+    }
+
+    // ミラーリングを停止する
+    private sropMirroring(): void {
+        let instance = ExecController.getInstance();
+        instance.stopMirroring();
+        this.timer?.stop();
     }
 }
