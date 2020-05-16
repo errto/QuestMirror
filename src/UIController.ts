@@ -229,6 +229,9 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
         imgStart.src = "./resources/icon/ico_play.png"
         let imgStop = <HTMLImageElement>document.getElementById("mirroring_stop_image");
         imgStop.src = "./resources/icon/ico_stop.png" 
+        if (this.timer) {
+            this.timer.stop();
+        }
     }
 
     // デバイスが接続されていなかったとき
