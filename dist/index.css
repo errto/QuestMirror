@@ -50,3 +50,33 @@ body {
 hr {
     height: 0.5px;
 }
+
+.tab-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+.tab-label {
+    color: White;
+    background: rgba(24, 24, 24);
+    padding-top: 12px;
+    padding-bottom: 12px;
+    width: 50%;
+    order: -1;
+    font-size: small;
+}
+.tab-content {
+    width: 100%;
+    display: none;
+}
+/* アクティブなタブ */
+.tab-switch:checked+.tab-label {
+    background:LightGray;
+    color: rgb(56, 56, 56);
+}
+.tab-switch:checked+.tab-label+.tab-content {
+     display: block;
+}
+/* ラジオボタン非表示 */
+.tab-switch {
+    display: none;
+}

@@ -28,11 +28,8 @@ var Timer = /** @class */ (function () {
             var currentTime = new Date();
             var diff = (currentTime.getTime() - this.startTime.getTime()).toString();
             var time = parseInt(diff) / 1000;
-            console.log(time);
             var intTime = parseInt(time.toString());
-            console.log(intTime);
             this.hours = parseInt((intTime / 3600).toString());
-            console.log(this.hours);
             var intHours = parseInt((intTime / 60).toString());
             this.minutes = intHours % 60;
             this.seconds = intTime % 60;

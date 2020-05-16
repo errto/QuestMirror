@@ -41,6 +41,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var AssetsDownloader_1 = __importDefault(require("./AssetsDownloader"));
+var NetworkManager_1 = __importDefault(require("./base/NetworkManager"));
 // メインウィンドウ
 var mainWindow = null;
 // アプリが起動するとき
@@ -51,10 +52,9 @@ electron_1.app.on('ready', function () {
             nodeIntegration: true,
         },
         width: 300,
-        height: 600,
+        height: 700,
     });
     mainWindow.removeMenu();
-    mainWindow.webContents.openDevTools();
     // ウィンドウが閉じたとき
     mainWindow.on('closed', function () {
         mainWindow = null;
@@ -82,6 +82,11 @@ electron_1.app.on('ready', function () {
                 mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
             });
         });
+    }
+    else { // すでにダウンロードされているとき
+        // デバイスとの無線接続を試みる
+        var instance = NetworkManager_1.default.getInstance();
+        instance.findDevicesIP();
     }
     // ディレクトリ選択ボタンが押されたとき
     electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {

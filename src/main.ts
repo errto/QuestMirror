@@ -1,5 +1,6 @@
 import {app, BrowserWindow, dialog, ipcMain} from 'electron'
 import AssetsDownloader from './AssetsDownloader'
+import NetworkManager from './base/NetworkManager'
 
 // メインウィンドウ
 let mainWindow: Electron.BrowserWindow | null = null
@@ -13,7 +14,7 @@ app.on('ready', () => {
             nodeIntegration: true,
         },
         width: 300,
-        height: 600,
+        height: 700,
     })
 
     mainWindow.removeMenu();
@@ -48,6 +49,10 @@ app.on('ready', () => {
                 mainWindow?.webContents.send("download_end")
             });
         });
+    } else { // すでにダウンロードされているとき
+        // デバイスとの無線接続を試みる
+        let instance = NetworkManager.getInstance();
+        instance.findDevicesIP();
     }
 
     // ディレクトリ選択ボタンが押されたとき

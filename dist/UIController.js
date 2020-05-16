@@ -42,29 +42,19 @@ var UIContoller = /** @class */ (function () {
             if (!instance.getIsMirroring()) { // 再生していないとき
                 if (_this.isCaptureEnable()) {
                     if (_this.isCaptureDirectroySelected()) {
-                        instance.startMirroring();
-                        var img = document.getElementById("mirroring_start_image");
-                        img.src = "./resources/icon/ico_play_active.png";
+                        _this.startMirroring();
                     }
                     else {
                         electron_1.ipcRenderer.send('no_capture_directory_is_selected');
                     }
                 }
                 else {
-                    instance.startMirroring();
-                    var img = document.getElementById("mirroring_start_image");
-                    img.src = "./resources/icon/ico_play_active.png";
-                    _this.timer = new Timer_1.default();
-                    _this.timer.setEventListener(_this);
-                    _this.timer.start();
+                    _this.startMirroring();
                 }
             }
         });
         this.endMirroringButton.addEventListener("click", function () {
-            var _a;
-            var instance = ExecController_1.default.getInstance();
-            instance.stopMirroring();
-            (_a = _this.timer) === null || _a === void 0 ? void 0 : _a.stop();
+            _this.sropMirroring();
         });
         this.endMirroringButton.addEventListener("mouseover", function () {
             var instance = ExecController_1.default.getInstance();
@@ -197,6 +187,9 @@ var UIContoller = /** @class */ (function () {
         imgStart.src = "./resources/icon/ico_play.png";
         var imgStop = document.getElementById("mirroring_stop_image");
         imgStop.src = "./resources/icon/ico_stop.png";
+        if (this.timer) {
+            this.timer.stop();
+        }
     };
     // デバイスが接続されていなかったとき
     UIContoller.prototype.onDeviceDisconected = function () {
@@ -228,6 +221,7 @@ var UIContoller = /** @class */ (function () {
         if (this.timer) {
             var time = (_a = this.timer) === null || _a === void 0 ? void 0 : _a.toString();
             this.mirroringTimeLabel.innerText = time;
+            this.timer = null;
         }
     };
     // キャプチャが有効か
@@ -238,6 +232,23 @@ var UIContoller = /** @class */ (function () {
     UIContoller.prototype.isCaptureDirectroySelected = function () {
         console.log(this.directorySelectButton.innerText);
         return this.directorySelectButton.innerText != "No Directory Selected";
+    };
+    // ミラーリングを開始する
+    UIContoller.prototype.startMirroring = function () {
+        var instance = ExecController_1.default.getInstance();
+        instance.startMirroring();
+        var img = document.getElementById("mirroring_start_image");
+        img.src = "./resources/icon/ico_play_active.png";
+        this.timer = new Timer_1.default();
+        this.timer.setEventListener(this);
+        this.timer.start();
+    };
+    // ミラーリングを停止する
+    UIContoller.prototype.sropMirroring = function () {
+        var _a;
+        var instance = ExecController_1.default.getInstance();
+        instance.stopMirroring();
+        (_a = this.timer) === null || _a === void 0 ? void 0 : _a.stop();
     };
     return UIContoller;
 }());
