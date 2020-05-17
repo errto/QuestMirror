@@ -1,6 +1,7 @@
 import * as child from "child_process"
 import ExecControllerListener from "./ExecControllerListener";
 import ScrcpySettings from './ScrcpySettings';
+import StringUtil from "./StringUtil";
 
 // 外部アプリを管理するContorllerクラス
 export default class ExecController {
@@ -15,6 +16,8 @@ export default class ExecController {
     private isMirroring: boolean;
     // イベントリスナー
     private listener: ExecControllerListener | null;
+    // QuestのIPアドレス
+    private ip: string
 
     // コンストラクタ
      private constructor() {
@@ -22,6 +25,7 @@ export default class ExecController {
         this.childProcess = null;
         this.isMirroring = false;
         this.listener = null;
+        this.ip = "";
     }
 
     // イベントリスナーを設定する
@@ -102,7 +106,7 @@ export default class ExecController {
     }
 
     // デバイスが接続されているか
-    private isDeviceConnected(successCallback: Function,
+    public isDeviceConnected(successCallback: Function,
          failerCallback: Function): void {
         const path: string = __dirname;
         let cmd = '/scrcpy/adb.exe';
@@ -119,6 +123,58 @@ export default class ExecController {
                 successCallback();
             }
         });
+    }
+
+    // ipアドレスを取得する
+    private getIP(successCallback: Function,
+        failerCallback: Function): void {
+        const path: string = __dirname;
+        let cmd = '/scrcpy/adb.exe';
+        let cp = child.spawn(path + cmd, ["shell","dumpsys", "wifi"]);
+        
+        let outStr = ""
+        cp.stdout.setEncoding('utf-8');
+        cp.stdout.on('data', function (data) {
+            outStr += String(data);
+        });
+
+        cp.on("close", () => {
+            let strLines = StringUtil.getLines(outStr)
+            for (let i = 0; i < strLines.length; i++) {
+                if (strLines[i].indexOf("ip_address") >= 0) {
+                    this.ip = strLines[i].slice(11);
+                    successCallback();
+                    return
+                }
+            }
+            failerCallback() // 見つからなかったとき
+        })
+    }
+
+    // TCP/IPで接続する
+    private connectTCPIP(): void {
+        const path: string = __dirname;
+        let cmd = '/scrcpy/adb.exe';
+        let cp = child.spawn(path + cmd, ["tcpip","5555"]);
+        cp.stdout.setEncoding('utf-8');
+        cp.on("close", () => {
+            child.spawn(path + cmd, ["connect", this.ip+ ":5555"]);
+        })
+    }
+
+    // デバイスとの接続を切る
+    public disconnect(): void {
+        const path: string = __dirname;
+        let cmd = '/scrcpy/adb.exe';
+        child.spawn(path + cmd, ["disconnect"]);
+    }
+
+    // ワイアレス接続する 
+    public connectWireless(): void {
+        this.getIP(
+            () => { this.connectTCPIP(); },
+            () => {}
+        );
     }
 
     // scrcpyを実行する

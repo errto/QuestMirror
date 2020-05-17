@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var ExecController_1 = __importDefault(require("./ExecController"));
 var Spiner_1 = __importDefault(require("./Spiner"));
-var Timer_1 = __importDefault(require("./base/Timer"));
+var Timer_1 = __importDefault(require("./Timer"));
 // UIを管理するControllerクラス
 var UIContoller = /** @class */ (function () {
     // コンストラクタ
@@ -24,6 +24,10 @@ var UIContoller = /** @class */ (function () {
         this.cropRightCheckbox = document.getElementById("crop_right_checkbox");
         this.cropLeftCheckbox = document.getElementById("crop_left_checkbox");
         this.mirroringTimeLabel = document.getElementById("mirroring_time");
+        this.deviceStatusLabel = document.getElementById("device_status");
+        this.wifiCheckBox = document.getElementById("wifi_checkbox");
+        this.usbCheckBox = document.getElementById("usb_checkbox");
+        this.deviceStatusIcon = document.getElementById("device_status_icon");
         this.timer = null;
         this.indicator = new Spiner_1.default();
         this.indicator.hide();
@@ -147,38 +151,65 @@ var UIContoller = /** @class */ (function () {
                 _this.cropLeftCheckbox.checked = false;
             }
         });
+        this.wifiCheckBox.addEventListener("change", function () {
+            var val = _this.wifiCheckBox.checked;
+            if (val) {
+                ExecController_1.default.getInstance().connectWireless();
+            }
+        });
         // ダウンロードを開始したとき
         electron_1.ipcRenderer.on("download_start", function (event, args) {
-            _this.startMirroringButton.disabled = true;
-            _this.endMirroringButton.disabled = true;
-            _this.maxScreenSizeSlider.disabled = true;
-            ;
-            _this.fpsSlider.disabled = true;
-            _this.windowBorderCheckbox.disabled = true;
-            _this.windowTitleTextInput.disabled = true;
-            _this.captureCheckbox.disabled = true;
-            _this.fullscreenCheckbox.disabled = true;
-            _this.cropCheckbox.disabled = true;
-            _this.cropRightCheckbox.disabled = true;
-            ;
-            _this.cropLeftCheckbox.disabled = true;
+            _this.disenable();
             _this.indicator.show();
         });
         // ダウンロードを終了したとき
         electron_1.ipcRenderer.on("download_end", function (event, args) {
-            _this.startMirroringButton.disabled = false;
-            _this.endMirroringButton.disabled = false;
-            _this.maxScreenSizeSlider.disabled = false;
-            _this.fpsSlider.disabled = false;
-            _this.windowBorderCheckbox.disabled = false;
-            _this.windowTitleTextInput.disabled = false;
-            _this.captureCheckbox.disabled = false;
-            _this.fullscreenCheckbox.disabled = false;
-            _this.cropCheckbox.disabled = false;
-            _this.cropRightCheckbox.disabled = false;
-            _this.cropLeftCheckbox.disabled = false;
+            _this.enable();
             _this.indicator.hide();
         });
+        // デバイスの接続を確認できたとき
+        electron_1.ipcRenderer.on("device_conected", function (event, args) {
+            console.log("device_conected");
+            _this.enable();
+            _this.deviceStatusLabel.innerText = "Device Ready";
+            _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
+            _this.usbCheckBox.checked = true;
+        });
+        // デバイスの接続を確認できなかったとき
+        electron_1.ipcRenderer.on("device_disconected", function (event, args) {
+            _this.disenable();
+            console.log("device_disconected");
+            _this.deviceStatusLabel.innerText = "Device Not Ready";
+            _this.deviceStatusIcon.setAttribute("style", "background-color: red");
+            electron_1.ipcRenderer.send('device_disconected');
+        });
+        electron_1.ipcRenderer.send('UIController_is_ready');
+    };
+    UIContoller.prototype.enable = function () {
+        this.startMirroringButton.disabled = false;
+        this.endMirroringButton.disabled = false;
+        this.maxScreenSizeSlider.disabled = false;
+        this.fpsSlider.disabled = false;
+        this.windowBorderCheckbox.disabled = false;
+        this.windowTitleTextInput.disabled = false;
+        this.captureCheckbox.disabled = false;
+        this.fullscreenCheckbox.disabled = false;
+        this.cropCheckbox.disabled = false;
+        this.cropRightCheckbox.disabled = false;
+        this.cropLeftCheckbox.disabled = false;
+    };
+    UIContoller.prototype.disenable = function () {
+        this.startMirroringButton.disabled = true;
+        this.endMirroringButton.disabled = true;
+        this.maxScreenSizeSlider.disabled = true;
+        this.fpsSlider.disabled = true;
+        this.windowBorderCheckbox.disabled = true;
+        this.windowTitleTextInput.disabled = true;
+        this.captureCheckbox.disabled = true;
+        this.fullscreenCheckbox.disabled = true;
+        this.cropCheckbox.disabled = true;
+        this.cropRightCheckbox.disabled = true;
+        this.cropLeftCheckbox.disabled = true;
     };
     // ミラーリングが停止したとき
     // scrcpyが直接停止した時に呼び出される

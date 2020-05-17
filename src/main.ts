@@ -1,6 +1,6 @@
 import {app, BrowserWindow, dialog, ipcMain} from 'electron'
 import AssetsDownloader from './AssetsDownloader'
-import NetworkManager from './base/NetworkManager'
+import ExecController from './ExecController'
 
 // メインウィンドウ
 let mainWindow: Electron.BrowserWindow | null = null
@@ -14,13 +14,14 @@ app.on('ready', () => {
             nodeIntegration: true,
         },
         width: 300,
-        height: 700,
+        height: 300,
     })
 
     mainWindow.removeMenu();
 
     // ウィンドウが閉じたとき
     mainWindow.on('closed', () => {
+        ExecController.getInstance().disconnect();
         mainWindow = null
     })
     
@@ -49,13 +50,38 @@ app.on('ready', () => {
                 mainWindow?.webContents.send("download_end")
             });
         });
-    } else { // すでにダウンロードされているとき
-        // デバイスとの無線接続を試みる
-        let instance = NetworkManager.getInstance();
-        instance.findDevicesIP();
     }
 
-    // ディレクトリ選択ボタンが押されたとき
+    // デバイスが接続されてないとき
+    ipcMain.on("device_disconected", async () => {
+        if (mainWindow) {
+            var options = {
+                title: 'No device is connected',
+                type: 'info',
+                buttons: ['OK'],
+                message: 'No device is connected.',
+                detail: "Please connect your Oculus Quest device via USB cable."
+            };
+            await dialog.showMessageBox(mainWindow, options);
+            let execController = ExecController.getInstance();
+            execController.isDeviceConnected(
+                () => { mainWindow?.webContents.send("device_conected") },
+                () => { mainWindow?.webContents.send("device_disconected") }
+            );
+        }
+    })
+
+    // UIControllerの設定が完了したとき
+    ipcMain.on("UIController_is_ready", () => {
+        if (downloader.getHasDownloaded()) {
+            let execController = ExecController.getInstance();
+            execController.isDeviceConnected(
+                () => { mainWindow?.webContents.send("device_conected") },
+                () => { mainWindow?.webContents.send("device_disconected") }
+            );
+        }
+    })
+
     ipcMain.on("directory_select_button_clicked", async (event, args) => {
         if (mainWindow) { // メインウィンドウが存在するとき
             let result = await dialog.showOpenDialog(mainWindow, {
@@ -66,17 +92,14 @@ app.on('ready', () => {
         }
     })
 
-    // デバイスが接続されていないとき
-    ipcMain.on("device_disconected", () => {
-        if (mainWindow) {
-            var options = {
-                title: 'Device Disconected',
-                type: 'info',
-                buttons: ['OK'],
-                message: 'Device Disconected.',
-                detail: "Please conect Oculus Deice."
-            };
-            dialog.showMessageBox(mainWindow, options);
+    // ディレクトリ選択ボタンが押されたとき
+    ipcMain.on("directory_select_button_clicked", async (event, args) => {
+        if (mainWindow) { // メインウィンドウが存在するとき
+            let result = await dialog.showOpenDialog(mainWindow, {
+                properties: ['openDirectory', "createDirectory"]
+            });
+            let path = result.filePaths[0]
+            mainWindow.webContents.send("directory_selected", path)
         }
     })
 

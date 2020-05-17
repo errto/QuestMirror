@@ -41,7 +41,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var AssetsDownloader_1 = __importDefault(require("./AssetsDownloader"));
-var NetworkManager_1 = __importDefault(require("./base/NetworkManager"));
+var ExecController_1 = __importDefault(require("./ExecController"));
 // メインウィンドウ
 var mainWindow = null;
 // アプリが起動するとき
@@ -52,11 +52,12 @@ electron_1.app.on('ready', function () {
             nodeIntegration: true,
         },
         width: 300,
-        height: 700,
+        height: 300,
     });
     mainWindow.removeMenu();
     // ウィンドウが閉じたとき
     mainWindow.on('closed', function () {
+        ExecController_1.default.getInstance().disconnect();
         mainWindow = null;
     });
     // htmlをロード
@@ -83,11 +84,55 @@ electron_1.app.on('ready', function () {
             });
         });
     }
-    else { // すでにダウンロードされているとき
-        // デバイスとの無線接続を試みる
-        var instance = NetworkManager_1.default.getInstance();
-        instance.findDevicesIP();
-    }
+    // デバイスが接続されてないとき
+    electron_1.ipcMain.on("device_disconected", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var options, execController;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!mainWindow) return [3 /*break*/, 2];
+                    options = {
+                        title: 'No device is connected',
+                        type: 'info',
+                        buttons: ['OK'],
+                        message: 'No device is connected.',
+                        detail: "Please connect your Oculus Quest device via USB cable."
+                    };
+                    return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
+                case 1:
+                    _a.sent();
+                    execController = ExecController_1.default.getInstance();
+                    execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
+            }
+        });
+    }); });
+    // UIControllerの設定が完了したとき
+    electron_1.ipcMain.on("UIController_is_ready", function () {
+        if (downloader.getHasDownloaded()) {
+            var execController = ExecController_1.default.getInstance();
+            execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+        }
+    });
+    electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {
+        var result, path;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!mainWindow) return [3 /*break*/, 2];
+                    return [4 /*yield*/, electron_1.dialog.showOpenDialog(mainWindow, {
+                            properties: ['openDirectory', "createDirectory"]
+                        })];
+                case 1:
+                    result = _a.sent();
+                    path = result.filePaths[0];
+                    mainWindow.webContents.send("directory_selected", path);
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
+            }
+        });
+    }); });
     // ディレクトリ選択ボタンが押されたとき
     electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {
         var result, path;
@@ -107,19 +152,6 @@ electron_1.app.on('ready', function () {
             }
         });
     }); });
-    // デバイスが接続されていないとき
-    electron_1.ipcMain.on("device_disconected", function () {
-        if (mainWindow) {
-            var options = {
-                title: 'Device Disconected',
-                type: 'info',
-                buttons: ['OK'],
-                message: 'Device Disconected.',
-                detail: "Please conect Oculus Deice."
-            };
-            electron_1.dialog.showMessageBox(mainWindow, options);
-        }
-    });
     // キャプチャディレクトリが選択されていないとき
     electron_1.ipcMain.on("no_capture_directory_is_selected", function () {
         if (mainWindow) {

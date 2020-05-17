@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var child = __importStar(require("child_process"));
 var ScrcpySettings_1 = __importDefault(require("./ScrcpySettings"));
+var StringUtil_1 = __importDefault(require("./StringUtil"));
 // 外部アプリを管理するContorllerクラス
 var ExecController = /** @class */ (function () {
     // コンストラクタ
@@ -20,6 +21,7 @@ var ExecController = /** @class */ (function () {
         this.childProcess = null;
         this.isMirroring = false;
         this.listener = null;
+        this.ip = "";
     }
     // イベントリスナーを設定する
     ExecController.prototype.setEventListener = function (listener) {
@@ -92,6 +94,7 @@ var ExecController = /** @class */ (function () {
         cp.stdout.setEncoding('utf-8');
         cp.stdout.on('data', function (data) {
             var consoleOut = String(data);
+            console.log(consoleOut);
             if (consoleOut.indexOf("Quest") < 0) { // 接続されていなかったとき
                 failerCallback();
                 var args = ["/im", "adb.exe"];
@@ -101,6 +104,55 @@ var ExecController = /** @class */ (function () {
                 successCallback();
             }
         });
+    };
+    // ipアドレスを取得する
+    ExecController.prototype.getIP = function (successCallback, failerCallback) {
+        var _this = this;
+        var path = __dirname;
+        var cmd = '/scrcpy/adb.exe';
+        var cp = child.spawn(path + cmd, ["shell", "dumpsys", "wifi"]);
+        var outStr = "";
+        cp.stdout.setEncoding('utf-8');
+        cp.stdout.on('data', function (data) {
+            outStr += String(data);
+        });
+        cp.on("close", function () {
+            var strLines = StringUtil_1.default.getLines(outStr);
+            for (var i = 0; i < strLines.length; i++) {
+                if (strLines[i].indexOf("ip_address") >= 0) {
+                    _this.ip = strLines[i].slice(11);
+                    console.log("ip_address:" + _this.ip);
+                    successCallback();
+                    return;
+                }
+            }
+            failerCallback(); // 見つからなかったとき
+        });
+    };
+    // TCP/IPで接続する
+    ExecController.prototype.connectTCPIP = function () {
+        var _this = this;
+        var path = __dirname;
+        var cmd = '/scrcpy/adb.exe';
+        var cp = child.spawn(path + cmd, ["tcpip", "5555"]);
+        cp.stdout.setEncoding('utf-8');
+        cp.stdout.on('data', function (data) {
+            console.log(String(data));
+        });
+        cp.on("close", function () {
+            child.spawn(path + cmd, ["connect", _this.ip + ":5555"]);
+        });
+    };
+    // デバイスとの接続を切る
+    ExecController.prototype.disconnect = function () {
+        var path = __dirname;
+        var cmd = '/scrcpy/adb.exe';
+        child.spawn(path + cmd, ["disconnect"]);
+    };
+    // ワイアレス接続する 
+    ExecController.prototype.connectWireless = function () {
+        var _this = this;
+        this.getIP(function () { _this.connectTCPIP(); }, function () { });
     };
     // scrcpyを実行する
     ExecController.prototype.executeScrcpy = function (args) {

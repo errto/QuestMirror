@@ -9,7 +9,7 @@
 <body>
 
   <div class="tab-wrap">
-    <input id="TAB-01" type="radio" name="TAB" class="tab-switch" checked="checked"/>
+    <input id="TAB-01" type="radio" name="TAB" class="tab-switch" checked="checked" />
     <label class="tab-label" for="TAB-01">Mirroring</label>
     <div class="tab-content">
       <h4 class="top_title">Mirrroing</h4>
@@ -25,84 +25,139 @@
         <div id="mirroring_time">00:00:00</div>
       </div>
 
-      <h4>Configuration</h4>
-
-      <div class="configuration_section">
-
-        <div class="configuration_item" id="crop">
-          <label>crop</label>
-          <input type="checkbox" id="crop_checkbox" checked>
-
-          <label>right</label>
-          <input type="checkbox" id="crop_right_checkbox">
-
-          <label>left</label>
-          <input type="checkbox" id="crop_left_checkbox" checked>
-          <hr>
+      <div id="device_section">
+        <div id="device_status_section">
+          <div id="device_status_icon"></div>
+          <div id="device_status">Connecting...</div>
         </div>
-        <div class="configuration_item" id="max_screen_size">
-          <div class="range">
-            <div class="configuratin_item_label">Max Screen Size</div>
-            <div class="slider_item">
-              <input class="slider" id="max_screen_size_slider" type="range" min="512" max="1920" value="1028">
-              <span class="slider_value">1028</span>
-            </div>
+
+        <div id="connection_type_section">
+          <div>
+            <label>Wi-fi</label>
+            <input type="radio" id="wifi_checkbox">
           </div>
-          <hr>
-        </div>
 
-        <div class="configuration_item" id="fps">
-          <div class="range">
-            <div class="configuratin_item_label">FPS</div>
-            <div class="slider_item">
-              <input class="slider" id="fps_slider" type="range" min="5" max="72" value="60">
-              <span class="slider_value">60</span>
-            </div>
-            <hr>
+          <div>
+            <label>USB</label>
+            <input type="radio" id="usb_checkbox">
           </div>
-        </div>
-
-        <div class="configuration_item" id="fullscreen">
-          <label class="configuratin_item_label">Fullscreen</label>
-          <input type="checkbox" id="fullscreen_checkbox">
-          <hr>
-        </div>
-
-        <div class="configuration_item" id="window_border">
-          <label class="configuratin_item_label">Window Border</label>
-          <input type="checkbox" id="window_border_checkbox">
-          <hr>
-        </div>
-
-        <div class="configuration_item" id="window_name">
-          <div class="range">
-            <label class="configuratin_item_label">Window Name</label>
-            <input type="text" id="window_name_input" name="name" minlength="1" maxlength="256" size="12">
-          </div>
-          <hr>
-        </div>
-
-        <div class="configuration_item" id="capture">
-          <label>Capture</label>
-          <input type="checkbox" id="capture_checkbox">
-          <button type="button" id="directory_select_button" disabled>No Directory Selected</button>
         </div>
       </div>
-
-      <script>var exports = { "__esModule": true };</script>
-      <script type="text/javascript" defer src="./Renderer.js"></script>
-      <script type="text/javascript" src="./Slider.js"></script>
-
     </div>
 
     <input id="TAB-02" type="radio" name="TAB" class="tab-switch" />
-    <label class="tab-label" for="TAB-02">Connection</label>
+    <label class="tab-label" for="TAB-02">Configuration</label>
     <div class="tab-content">
-      <div>Device</div>
-      <div>Connection:<span>OK</span></div>
+
+      <!-- crop -->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-one" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-one">crop</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="crop">
+            <label>crop</label>
+            <input type="checkbox" id="crop_checkbox" checked>
+  
+            <label>right</label>
+            <input type="checkbox" id="crop_right_checkbox">
+  
+            <label>left</label>
+            <input type="checkbox" id="crop_left_checkbox" checked>
+          </div>
+        </div>
+      </div>
+
+      <!-- Max Screen Size -->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-two" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-two">Max Screen Size</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="max_screen_size">
+            <div class="range">
+              <div class="configuratin_item_label">Max Screen Size</div>
+              <div class="slider_item">
+                <input class="slider" id="max_screen_size_slider" type="range" min="512" max="1920" value="1028">
+                <span class="slider_value">1028</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--fps-->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-three" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-three">FPS</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="fps">
+            <div class="range">
+              <div class="configuratin_item_label">FPS</div>
+              <div class="slider_item">
+                <input class="slider" id="fps_slider" type="range" min="5" max="72" value="60">
+                <span class="slider_value">60</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--FullScreen-->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-four" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-four">Fullscreen</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="fullscreen">
+            <label class="configuratin_item_label">Fullscreen</label>
+            <input type="checkbox" id="fullscreen_checkbox">
+          </div>
+        </div>
+      </div>
+
+      <!--Window Border-->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-five" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-five">Window Border</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="window_border">
+            <label class="configuratin_item_label">Window Border</label>
+            <input type="checkbox" id="window_border_checkbox">
+          </div>
+        </div>
+      </div>
+
+      <!--Window Name-->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-six" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-six">Window Name</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="window_name">
+            <div class="range">
+              <label class="configuratin_item_label">Window Name</label>
+              <input type="text" id="window_name_input" name="name" minlength="1" maxlength="256" size="12">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--Capture-->
+      <div class="cp_actab">
+        <input class="cp_actab_input" id="tab-seven" type="checkbox" name="tabs">
+        <label class="cp_actab_label" for="tab-seven">Capture</label>
+        <div class="cp_actab-content">
+          <div class="configuration_item" id="capture">
+            <label>Capture</label>
+            <input type="checkbox" id="capture_checkbox">
+            <button type="button" id="directory_select_button" disabled>No Directory Selected</button>
+          </div>
+        </div>
+        </div>
+      </div>
     </div>
   </div>
 
-</body>
+  <script>var exports = { "__esModule": true };</script>
+  <script type="text/javascript" defer src="./Renderer.js"></script>
+  <script type="text/javascript" src="./Slider.js"></script>
 
+</body>
 </html>

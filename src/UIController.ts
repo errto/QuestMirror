@@ -2,8 +2,8 @@ import { ipcRenderer } from 'electron'
 import ExecController from "./ExecController";
 import ExecControllerListener from './ExecControllerListener';
 import Spinner from './Spiner';
-import Timer from './base/Timer';
-import TimerEventListener from './base/TimerEventListener';
+import Timer from './Timer';
+import TimerEventListener from './TimerEventListener';
 
 // UIを管理するControllerクラス
 export default class UIContoller implements ExecControllerListener, TimerEventListener {
@@ -38,6 +38,14 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
     private mirroringTimeLabel: HTMLElement;
     // タイマー
     private timer: Timer | null;
+    // デバイスステータス
+    private deviceStatusLabel: HTMLElement;
+    // ステータスアイコン
+    private deviceStatusIcon: HTMLElement;
+    // Wi-Fi接続チェックボックス
+    private wifiCheckBox: HTMLInputElement;
+    // USB接続チェックボックス
+    private usbCheckBox: HTMLInputElement;
 
     // コンストラクタ
     constructor() {
@@ -54,6 +62,10 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
         this.cropRightCheckbox = <HTMLInputElement>document.getElementById("crop_right_checkbox");
         this.cropLeftCheckbox = <HTMLInputElement>document.getElementById("crop_left_checkbox");
         this.mirroringTimeLabel = <HTMLElement>document.getElementById("mirroring_time");
+        this.deviceStatusLabel = <HTMLElement>document.getElementById("device_status");
+        this.wifiCheckBox = <HTMLInputElement>document.getElementById("wifi_checkbox");
+        this.usbCheckBox = <HTMLInputElement>document.getElementById("usb_checkbox");
+        this.deviceStatusIcon = <HTMLElement>document.getElementById("device_status_icon");
         this.timer = null;
         this.indicator = new Spinner();
         this.indicator.hide();
@@ -188,37 +200,70 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
             }
         })
 
+        this.wifiCheckBox.addEventListener("change", () => {
+            let val = this.wifiCheckBox.checked
+            if (val) {
+                ExecController.getInstance().connectWireless();
+            }
+        })
+
         // ダウンロードを開始したとき
         ipcRenderer.on("download_start", (event, args) => {
-            this.startMirroringButton.disabled = true;
-            this.endMirroringButton.disabled = true;
-            this.maxScreenSizeSlider.disabled = true;;
-            this.fpsSlider.disabled = true;
-            this.windowBorderCheckbox.disabled = true;
-            this.windowTitleTextInput.disabled = true;
-            this.captureCheckbox.disabled = true;
-            this.fullscreenCheckbox.disabled = true;
-            this.cropCheckbox.disabled = true;
-            this.cropRightCheckbox.disabled = true;;
-            this.cropLeftCheckbox.disabled = true;
+            this.disenable();
             this.indicator.show();
         })
 
         // ダウンロードを終了したとき
         ipcRenderer.on("download_end", (event, args) => {
-            this.startMirroringButton.disabled = false;
-            this.endMirroringButton.disabled = false;
-            this.maxScreenSizeSlider.disabled = false;
-            this.fpsSlider.disabled = false;
-            this.windowBorderCheckbox.disabled = false;
-            this.windowTitleTextInput.disabled = false;
-            this.captureCheckbox.disabled = false;
-            this.fullscreenCheckbox.disabled = false;
-            this.cropCheckbox.disabled = false;
-            this.cropRightCheckbox.disabled = false;
-            this.cropLeftCheckbox.disabled = false;
+            this.enable();
             this.indicator.hide();
         })
+
+        // デバイスの接続を確認できたとき
+        ipcRenderer.on("device_conected", (event, args) => {
+            this.enable();
+            this.deviceStatusLabel.innerText = "Device Ready"
+            this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow")
+            this.usbCheckBox.checked = true;
+        })
+
+        // デバイスの接続を確認できなかったとき
+        ipcRenderer.on("device_disconected", (event, args) => {
+            this.disenable();
+            this.deviceStatusLabel.innerText = "Device Not Ready"
+            this.deviceStatusIcon.setAttribute("style", "background-color: red");
+            ipcRenderer.send('device_disconected');
+        })
+
+        ipcRenderer.send('UIController_is_ready');
+    }
+
+    private enable(): void {
+        this.startMirroringButton.disabled = false;
+        this.endMirroringButton.disabled = false;
+        this.maxScreenSizeSlider.disabled = false;
+        this.fpsSlider.disabled = false;
+        this.windowBorderCheckbox.disabled = false;
+        this.windowTitleTextInput.disabled = false;
+        this.captureCheckbox.disabled = false;
+        this.fullscreenCheckbox.disabled = false;
+        this.cropCheckbox.disabled = false;
+        this.cropRightCheckbox.disabled = false;
+        this.cropLeftCheckbox.disabled = false;
+    }
+
+    private disenable(): void {
+        this.startMirroringButton.disabled = true;
+        this.endMirroringButton.disabled = true;
+        this.maxScreenSizeSlider.disabled = true;
+        this.fpsSlider.disabled = true;
+        this.windowBorderCheckbox.disabled = true;
+        this.windowTitleTextInput.disabled = true;
+        this.captureCheckbox.disabled = true;
+        this.fullscreenCheckbox.disabled = true;
+        this.cropCheckbox.disabled = true;
+        this.cropRightCheckbox.disabled = true;
+        this.cropLeftCheckbox.disabled = true;
     }
 
     
