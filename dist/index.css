@@ -1,5 +1,5 @@
 body {
-    background-color: rgb(24,24,24);
+    background-color: #333333;
     color: aliceblue;
     text-align: center;
     margin: 0%;
@@ -15,6 +15,37 @@ body {
 
 #mirroring_stop_button {
     padding-left: 19px;
+}
+
+#device_section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;  
+    margin-top: 12px;
+}
+
+#device_status_section {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+#device_status_icon {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin-right: 5px;
+    margin-bottom: 2px;
+    background-color:red;
+}
+
+#connection_type_section {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 
 .configuration_section {
@@ -49,4 +80,76 @@ body {
   
 hr {
     height: 0.5px;
+}
+
+.tab-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.tab-label {
+    color: whitesmoke;
+    background: #333333;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    width: 50%;
+    order: -1;
+    font-size: small;
+    box-shadow: 0px 2px 4px rgb(0, 0, 0);
+}
+.tab-content {
+    width: 100%;
+    display: none;
+    margin-top: 5px;
+}
+/* アクティブなタブ */
+.tab-switch:checked+.tab-label {
+    background: #454C50;
+    color: whitesmoke;
+}
+.tab-switch:checked+.tab-label+.tab-content {
+     display: block;
+}
+/* ラジオボタン非表示 */
+.tab-switch {
+    display: none;
+}
+
+.cp_actab {
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	margin: 0 auto;
+	color: #ffffff;
+}
+.cp_actab_input {
+	position: absolute;
+	z-index: -1;
+	opacity: 0;
+}
+.cp_actab_label {
+	font-size: small;
+	line-height: 2;
+	position: relative;
+	display: block;
+	padding: 0 0 0 16px;
+	cursor: pointer;
+	margin: 0 0 1px 0;
+	background: #454C50;
+}
+.cp_actab .cp_actab-content {
+	overflow: hidden;
+	max-height: 0;
+	-webkit-transition: max-height 0.35s;
+	transition: max-height 0.35s;
+	color: whitesmoke;
+    background: #333333;
+    font-size: small;
+}
+.cp_actab .cp_actab-content p {
+	margin: 8px;
+}
+/* :checked */
+.cp_actab input:checked ~ .cp_actab-content {
+    max-height: 20em;
 }

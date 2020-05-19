@@ -19,10 +19,25 @@ export default class ScrcpySettings {
     public needBorder: boolean = true;
     // フルスクリーンで表示するか
     public isFullScreen: boolean = false;
+    // wi-fi接続か
+    public isWireless: boolean = false;
+    // 端末のip
+    public deviceIp: string = "";
+    // 端末のシリアル番号
+    public deviceSerial: string = "";
 
     // 引数として返す
     public toArgs(): string[] {
         let args = []
+
+        if (this.isWireless) {
+            args.push("-s");
+            args.push(this.deviceIp);
+        } else {
+            args.push("-s");
+            args.push(this.deviceSerial);
+        }
+
         if (this.maxSize > 0) {
             args.push("-m")
             args.push(this.maxSize.toString());
