@@ -21,10 +21,24 @@ var ScrcpySettings = /** @class */ (function () {
         this.needBorder = true;
         // フルスクリーンで表示するか
         this.isFullScreen = false;
+        // wi-fi接続か
+        this.isWireless = false;
+        // 端末のip
+        this.deviceIp = "";
+        // 端末のシリアル番号
+        this.deviceSerial = "";
     }
     // 引数として返す
     ScrcpySettings.prototype.toArgs = function () {
         var args = [];
+        if (this.isWireless) {
+            args.push("-s");
+            args.push(this.deviceIp);
+        }
+        else {
+            args.push("-s");
+            args.push(this.deviceSerial);
+        }
         if (this.maxSize > 0) {
             args.push("-m");
             args.push(this.maxSize.toString());

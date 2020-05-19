@@ -154,7 +154,9 @@ var UIContoller = /** @class */ (function () {
         this.wifiCheckBox.addEventListener("change", function () {
             var val = _this.wifiCheckBox.checked;
             if (val) { // Wi-Fi接続にチェックがはいったとき
+                _this.sropMirroring();
                 _this.disenable();
+                ExecController_1.default.getInstance().setIsWirealess(true);
                 _this.deviceStatusLabel.innerText = "Connecting...";
                 _this.deviceStatusIcon.hidden = true;
                 ExecController_1.default.getInstance().connectWireless(function () {
@@ -164,6 +166,7 @@ var UIContoller = /** @class */ (function () {
                     _this.deviceStatusIcon.hidden = false;
                     electron_1.ipcRenderer.send("device_wireless_connected");
                 }, function () {
+                    ExecController_1.default.getInstance().setIsWirealess(false);
                     _this.wifiCheckBox.checked = false;
                     _this.deviceStatusLabel.innerText = "Device Not Ready";
                     _this.deviceStatusIcon.hidden = false;
@@ -174,9 +177,23 @@ var UIContoller = /** @class */ (function () {
         this.usbCheckBox.addEventListener("change", function () {
             var val0 = _this.usbCheckBox.checked;
             if (val0) { // USB接続にチェックが入ったとき
-                var val1 = _this.wifiCheckBox.checked;
-                if (val1) { // Wi-fi接続がオンのとき
-                }
+                _this.sropMirroring();
+                ExecController_1.default.getInstance().setIsWirealess(false);
+                _this.deviceStatusLabel.innerText = "Connecting...";
+                _this.deviceStatusIcon.hidden = true;
+                _this.wifiCheckBox.checked = false;
+                ExecController_1.default.getInstance().isDeviceConnected(function () {
+                    _this.enable();
+                    _this.deviceStatusLabel.innerText = "Device Ready";
+                    _this.deviceStatusIcon.hidden = false;
+                    _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
+                }, function () {
+                    _this.disenable();
+                    _this.deviceStatusLabel.innerText = "Device Not Ready";
+                    _this.deviceStatusIcon.hidden = false;
+                    _this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                    electron_1.ipcRenderer.send('device_disconected');
+                });
             }
         });
         // ダウンロードを開始したとき
@@ -246,6 +263,7 @@ var UIContoller = /** @class */ (function () {
     // ミラーリングが停止したとき
     // scrcpyが直接停止した時に呼び出される
     UIContoller.prototype.onEndMirroring = function () {
+        console.log("UIContoroller.onEndMirroring");
         var imgStart = document.getElementById("mirroring_start_image");
         imgStart.src = "./resources/icon/ico_play.png";
         var imgStop = document.getElementById("mirroring_stop_image");
@@ -256,10 +274,15 @@ var UIContoller = /** @class */ (function () {
     };
     // デバイスが接続されていなかったとき
     UIContoller.prototype.onDeviceDisconected = function () {
-        // startボタンを元に戻す
+        var _a;
+        this.disenable();
         var imgStart = document.getElementById("mirroring_start_image");
         imgStart.src = "./resources/icon/ico_play.png";
-        // ダイアログを表示するよう通知する
+        this.deviceStatusLabel.innerText = "Device Not Ready";
+        this.deviceStatusIcon.hidden = false;
+        this.deviceStatusIcon.setAttribute("style", "background-color: red");
+        this.wifiCheckBox.checked = false;
+        (_a = this.timer) === null || _a === void 0 ? void 0 : _a.stop();
         electron_1.ipcRenderer.send('device_disconected');
     };
     // タイマーが開始したとき

@@ -62,6 +62,7 @@ electron_1.app.on('ready', function () {
     });
     // htmlをロード
     mainWindow.loadURL('file://' + __dirname + '/index.html');
+    mainWindow.webContents.openDevTools();
     // scrcpyをダウンロードする
     var downloader = AssetsDownloader_1.default.getInstance();
     if (!downloader.getHasDownloaded()) { // scrcpyがダウンロードされていないとき

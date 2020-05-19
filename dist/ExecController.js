@@ -36,8 +36,16 @@ var ExecController = /** @class */ (function () {
     };
     // ミラーリングを開始する
     ExecController.prototype.startMirroring = function () {
-        var args = this.settings.toArgs();
-        this.executeScrcpy(args);
+        var _this = this;
+        this.isDeviceConnected(function () {
+            var args = _this.settings.toArgs();
+            console.log(args);
+            _this.executeScrcpy(args);
+        }, function () {
+            if (_this.listener) {
+                _this.listener.onDeviceDisconected();
+            }
+        });
     };
     // ミラーリングを停止する
     ExecController.prototype.stopMirroring = function () {
@@ -86,21 +94,36 @@ var ExecController = /** @class */ (function () {
     ExecController.prototype.getIsMirroring = function () {
         return this.isMirroring;
     };
+    // ワイアレス接続か
+    ExecController.prototype.setIsWirealess = function (b) {
+        this.settings.isWireless = b;
+    };
     // デバイスが接続されているか
     ExecController.prototype.isDeviceConnected = function (successCallback, failerCallback) {
+        var _this = this;
         var path = __dirname;
         var cmd = '/scrcpy/adb.exe';
         var cp = child.spawn(path + cmd, ["devices", "-l"]);
+        var outStr = "";
         cp.stdout.setEncoding('utf-8');
         cp.stdout.on('data', function (data) {
-            if (String(data).indexOf("Quest") < 0) { // 接続されていなかったとき
-                var args = ["/im", "adb.exe"];
-                child.spawn("taskkill", args);
-                failerCallback();
+            outStr = String(data);
+        });
+        cp.on("close", function () {
+            var strLines = StringUtil_1.default.getLines(outStr);
+            for (var i = 1; i < strLines.length; i++) {
+                if (strLines[i].indexOf("Quest") > 0 && strLines[i].indexOf("192.168") < 0) {
+                    var st = 0;
+                    var ed = strLines[i].indexOf(" ");
+                    _this.settings.deviceSerial = strLines[i].slice(st, ed);
+                    console.log(_this.settings.deviceSerial);
+                    successCallback();
+                    return;
+                }
             }
-            else {
-                successCallback();
-            }
+            var args = ["/im", "adb.exe"];
+            child.spawn("taskkill", args);
+            failerCallback();
         });
     };
     // ipアドレスを取得する
@@ -108,7 +131,8 @@ var ExecController = /** @class */ (function () {
         var _this = this;
         var path = __dirname;
         var cmd = '/scrcpy/adb.exe';
-        var cp = child.spawn(path + cmd, ["shell", "dumpsys", "wifi"]);
+        var cp = child.spawn(path + cmd, ["-s", this.settings.deviceSerial, "shell",
+            "dumpsys", "wifi"]);
         var outStr = "";
         cp.stdout.setEncoding('utf-8');
         cp.stdout.on('data', function (data) {
@@ -119,6 +143,7 @@ var ExecController = /** @class */ (function () {
             for (var i = 0; i < strLines.length; i++) {
                 if (strLines[i].indexOf("ip_address") >= 0) {
                     _this.ip = strLines[i].slice(11);
+                    _this.settings.deviceIp = _this.ip;
                     successCallback();
                     return;
                 }
@@ -131,7 +156,7 @@ var ExecController = /** @class */ (function () {
         var _this = this;
         var path = __dirname;
         var cmd = '/scrcpy/adb.exe';
-        var cp0 = child.spawn(path + cmd, ["tcpip", "5555"]);
+        var cp0 = child.spawn(path + cmd, ["-s", this.settings.deviceSerial, "tcpip", "5555"]);
         cp0.stdout.setEncoding('utf-8');
         cp0.on("close", function () {
             var cp1 = child.spawn(path + cmd, ["connect", _this.ip + ":5555"]);
@@ -152,27 +177,30 @@ var ExecController = /** @class */ (function () {
     // ワイアレス接続する 
     ExecController.prototype.connectWireless = function (successCallback, failerCallback) {
         var _this = this;
-        this.getIP(function () {
-            _this.connectTCPIP(successCallback, failerCallback);
+        this.isDeviceConnected(function () {
+            _this.getIP(function () {
+                _this.connectTCPIP(successCallback, failerCallback);
+            }, function () {
+                failerCallback();
+            });
         }, function () {
-            failerCallback();
+            if (_this.listener) {
+                _this.listener.onDeviceDisconected();
+            }
         });
     };
     // ワイアレス接続を解除する
     ExecController.prototype.disconnectWireless = function () {
+        this.settings.deviceIp = "";
     };
     // scrcpyを実行する
     ExecController.prototype.executeScrcpy = function (args) {
-        if (this.listener) { // リスナーが設定されているとき
-            this.isDeviceConnected(this.startScrcpy.bind(this, args), this.listener.onDeviceDisconected);
-        }
-        else { // 異常系
-            console.error("[ExecController] listener is null.");
-        }
+        this.startScrcpy(args);
     };
     // scrcpyを起動する
     ExecController.prototype.startScrcpy = function (args) {
         var _this = this;
+        console.log("startScrcpy");
         var path = __dirname;
         var cmd = '/scrcpy/scrcpy.exe';
         this.childProcess = child.spawn(path + cmd, args);
@@ -180,6 +208,7 @@ var ExecController = /** @class */ (function () {
         // closeしたとき
         this.childProcess.on('close', function (code) {
             var _a;
+            console.log("close scrcpy");
             if (_this.isMirroring) { //  scrcpyを直接閉じたとき
                 _this.isMirroring = false;
                 (_a = _this.listener) === null || _a === void 0 ? void 0 : _a.onEndMirroring();

@@ -204,7 +204,9 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
             let val = this.wifiCheckBox.checked
 
             if (val) { // Wi-Fi接続にチェックがはいったとき
+                this.sropMirroring();
                 this.disenable();
+                ExecController.getInstance().setIsWirealess(true);
                 this.deviceStatusLabel.innerText = "Connecting..."
                 this.deviceStatusIcon.hidden = true;
                 ExecController.getInstance().connectWireless(
@@ -216,6 +218,7 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
                         ipcRenderer.send("device_wireless_connected")
                     },
                     () => { // Wi-Fi接続に失敗したとき
+                        ExecController.getInstance().setIsWirealess(false);
                         this.wifiCheckBox.checked = false;
                         this.deviceStatusLabel.innerText = "Device Not Ready"
                         this.deviceStatusIcon.hidden = false;
@@ -228,12 +231,26 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
         this.usbCheckBox.addEventListener("change", () => {
             let val0 = this.usbCheckBox.checked
             if (val0) { // USB接続にチェックが入ったとき
-                let val1 = this.wifiCheckBox.checked
-                if (val1) { // Wi-fi接続がオンのとき
-                    
-
-                }
-
+                this.sropMirroring();  
+                ExecController.getInstance().setIsWirealess(false);
+                this.deviceStatusLabel.innerText = "Connecting..."
+                this.deviceStatusIcon.hidden = true;
+                this.wifiCheckBox.checked = false
+                ExecController.getInstance().isDeviceConnected(
+                    () => {
+                        this.enable();
+                        this.deviceStatusLabel.innerText = "Device Ready"
+                        this.deviceStatusIcon.hidden = false;
+                        this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow")
+                    },
+                    () => {
+                        this.disenable();
+                        this.deviceStatusLabel.innerText = "Device Not Ready"
+                        this.deviceStatusIcon.hidden = false;
+                        this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                        ipcRenderer.send('device_disconected');
+                    }
+                )
             }
         })
 
@@ -327,10 +344,14 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
 
     // デバイスが接続されていなかったとき
     onDeviceDisconected(): void {
-        // startボタンを元に戻す
+        this.disenable();
         let imgStart = <HTMLImageElement>document.getElementById("mirroring_start_image");
         imgStart.src = "./resources/icon/ico_play.png"
-        // ダイアログを表示するよう通知する
+        this.deviceStatusLabel.innerText = "Device Not Ready"
+        this.deviceStatusIcon.hidden = false;
+        this.deviceStatusIcon.setAttribute("style", "background-color: red");
+        this.wifiCheckBox.checked = false
+        this.timer?.stop();
         ipcRenderer.send('device_disconected');
     }
 

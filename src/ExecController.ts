@@ -43,8 +43,18 @@ export default class ExecController {
 
     // ミラーリングを開始する
     public startMirroring(): void {
-        let args = this.settings.toArgs()
-        this.executeScrcpy(args);
+
+        this.isDeviceConnected(
+            () => {
+                let args = this.settings.toArgs()
+                console.log(args)
+                this.executeScrcpy(args);
+            },
+            () => {
+                if(this.listener) {
+                    this.listener.onDeviceDisconected()
+                }
+            })
     }
 
     // ミラーリングを停止する
@@ -105,6 +115,11 @@ export default class ExecController {
         return this.isMirroring;
     }
 
+    // ワイアレス接続か
+    public setIsWirealess(b: boolean): void {
+        this.settings.isWireless = b;
+    }
+
     // デバイスが接続されているか
     public isDeviceConnected(successCallback: Function,
          failerCallback: Function): void {
@@ -112,16 +127,28 @@ export default class ExecController {
         let cmd = '/scrcpy/adb.exe';
         let cp = child.spawn(path + cmd, ["devices","-l"]);
         
+        let outStr = "";
         cp.stdout.setEncoding('utf-8');
         cp.stdout.on('data', function (data) {
-            if(String(data).indexOf("Quest") < 0) { // 接続されていなかったとき
-                let args = ["/im", "adb.exe"]
-                child.spawn("taskkill", args)
-                failerCallback();
-            } else {
-                successCallback();
-            }
+            outStr = String(data);
         });
+
+        cp.on("close", () => {
+            let strLines = StringUtil.getLines(outStr);
+            for (let i = 1; i < strLines.length; i++) {
+                if (strLines[i].indexOf("Quest") > 0 && strLines[i].indexOf("192.168") < 0) {
+                    let st = 0;
+                    let ed = strLines[i].indexOf(" ");
+                    this.settings.deviceSerial = strLines[i].slice(st, ed);
+                    console.log(this.settings.deviceSerial)
+                    successCallback();
+                    return
+                }
+            }
+            let args = ["/im", "adb.exe"]
+            child.spawn("taskkill", args)
+            failerCallback();
+        })
     }
 
     // ipアドレスを取得する
@@ -129,7 +156,8 @@ export default class ExecController {
         failerCallback: Function): void {
         const path: string = __dirname;
         let cmd = '/scrcpy/adb.exe';
-        let cp = child.spawn(path + cmd, ["shell","dumpsys", "wifi"]);
+        let cp = child.spawn(path + cmd, ["-s", this.settings.deviceSerial, "shell", 
+        "dumpsys", "wifi"]);
         
         let outStr = ""
         cp.stdout.setEncoding('utf-8');
@@ -142,6 +170,7 @@ export default class ExecController {
             for (let i = 0; i < strLines.length; i++) {
                 if (strLines[i].indexOf("ip_address") >= 0) {
                     this.ip = strLines[i].slice(11);
+                    this.settings.deviceIp = this.ip;
                     successCallback();
                     return
                 }
@@ -155,7 +184,7 @@ export default class ExecController {
         failerCallback: Function): void {
         const path: string = __dirname;
         let cmd = '/scrcpy/adb.exe';
-        let cp0 = child.spawn(path + cmd, ["tcpip","5555"]);
+        let cp0 = child.spawn(path + cmd, ["-s", this.settings.deviceSerial, "tcpip","5555"]);
         cp0.stdout.setEncoding('utf-8');
         cp0.on("close", () => {
             let cp1 = child.spawn(path + cmd, ["connect", this.ip+ ":5555"]);
@@ -165,7 +194,6 @@ export default class ExecController {
             cp1.on("error", () => {
                 failerCallback();
             })
-
         })
     }
 
@@ -179,31 +207,34 @@ export default class ExecController {
     // ワイアレス接続する 
     public connectWireless(successCallback: Function,
         failerCallback: Function): void {
-        this.getIP(
-            () => { 
-                this.connectTCPIP(successCallback, failerCallback);
+
+        this.isDeviceConnected(
+            () => {
+                this.getIP(
+                    () => { 
+                        this.connectTCPIP(successCallback, failerCallback);
+                    },
+                    () => {
+                        failerCallback()
+                    }
+                );
             },
             () => {
-                failerCallback()
+                if(this.listener) {
+                    this.listener.onDeviceDisconected()
+                }
             }
-        );
+        )
     }
 
     // ワイアレス接続を解除する
     public disconnectWireless(): void {
-        
+        this.settings.deviceIp = ""
     }
 
     // scrcpyを実行する
     private executeScrcpy(args :string[]): void {
-        if (this.listener) { // リスナーが設定されているとき
-            this.isDeviceConnected(
-                this.startScrcpy.bind(this, args),
-                this.listener.onDeviceDisconected
-            );
-        } else { // 異常系
-            console.error("[ExecController] listener is null.")
-        }
+        this.startScrcpy(args)
     }
 
     // scrcpyを起動する
