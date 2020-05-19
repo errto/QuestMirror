@@ -71,6 +71,20 @@ app.on('ready', () => {
         }
     })
 
+    // デバイスがワイアレス接続されたとき
+    ipcMain.on("device_wireless_connected", () => {
+        if (mainWindow) {
+            var options = {
+                title: 'Device is connected',
+                type: 'info',
+                buttons: ['OK'],
+                message: 'Device is connected wirelessly!',
+                detail: "Please unplug USB cable."
+            };
+            dialog.showMessageBox(mainWindow, options);
+        }
+    })
+
     // UIControllerの設定が完了したとき
     ipcMain.on("UIController_is_ready", () => {
         if (downloader.getHasDownloaded()) {

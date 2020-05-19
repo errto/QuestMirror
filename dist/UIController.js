@@ -153,8 +153,27 @@ var UIContoller = /** @class */ (function () {
         });
         this.wifiCheckBox.addEventListener("change", function () {
             var val = _this.wifiCheckBox.checked;
-            if (val) {
-                ExecController_1.default.getInstance().connectWireless();
+            if (val) { // Wi-Fi接続にチェックがはいったとき
+                _this.disenable();
+                _this.deviceStatusLabel.innerText = "Connecting...";
+                ExecController_1.default.getInstance().connectWireless(function () {
+                    _this.usbCheckBox.checked = false;
+                    _this.deviceStatusLabel.innerText = "Device Ready";
+                    _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
+                    electron_1.ipcRenderer.send("device_wireless_connected");
+                }, function () {
+                    _this.wifiCheckBox.checked = false;
+                    _this.deviceStatusLabel.innerText = "Device Not Ready";
+                    _this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                });
+            }
+        });
+        this.usbCheckBox.addEventListener("change", function () {
+            var val0 = _this.usbCheckBox.checked;
+            if (val0) { // USB接続にチェックが入ったとき
+                var val1 = _this.wifiCheckBox.checked;
+                if (val1) { // Wi-fi接続がオンのとき
+                }
             }
         });
         // ダウンロードを開始したとき
@@ -164,12 +183,23 @@ var UIContoller = /** @class */ (function () {
         });
         // ダウンロードを終了したとき
         electron_1.ipcRenderer.on("download_end", function (event, args) {
-            _this.enable();
             _this.indicator.hide();
+            // デバイスの接続を確認する
+            var execController = ExecController_1.default.getInstance();
+            execController.isDeviceConnected(function () {
+                _this.enable();
+                _this.deviceStatusLabel.innerText = "Device Ready";
+                _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
+                _this.usbCheckBox.checked = true;
+            }, function () {
+                _this.disenable();
+                _this.deviceStatusLabel.innerText = "Device Not Ready";
+                _this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                electron_1.ipcRenderer.send('device_disconected');
+            });
         });
         // デバイスの接続を確認できたとき
         electron_1.ipcRenderer.on("device_conected", function (event, args) {
-            console.log("device_conected");
             _this.enable();
             _this.deviceStatusLabel.innerText = "Device Ready";
             _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
@@ -178,7 +208,6 @@ var UIContoller = /** @class */ (function () {
         // デバイスの接続を確認できなかったとき
         electron_1.ipcRenderer.on("device_disconected", function (event, args) {
             _this.disenable();
-            console.log("device_disconected");
             _this.deviceStatusLabel.innerText = "Device Not Ready";
             _this.deviceStatusIcon.setAttribute("style", "background-color: red");
             electron_1.ipcRenderer.send('device_disconected');

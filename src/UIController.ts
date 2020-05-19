@@ -202,8 +202,35 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
 
         this.wifiCheckBox.addEventListener("change", () => {
             let val = this.wifiCheckBox.checked
-            if (val) {
-                ExecController.getInstance().connectWireless();
+
+            if (val) { // Wi-Fi接続にチェックがはいったとき
+                this.disenable();
+                this.deviceStatusLabel.innerText = "Connecting..."
+                ExecController.getInstance().connectWireless(
+                    () => { // Wi-FI接続に成功したとき
+                        this.usbCheckBox.checked = false;
+                        this.deviceStatusLabel.innerText = "Device Ready"
+                        this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow")
+                        ipcRenderer.send("device_wireless_connected")
+                    },
+                    () => { // Wi-Fi接続に失敗したとき
+                        this.wifiCheckBox.checked = false;
+                        this.deviceStatusLabel.innerText = "Device Not Ready"
+                        this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                    }
+                );
+            }
+        })
+
+        this.usbCheckBox.addEventListener("change", () => {
+            let val0 = this.usbCheckBox.checked
+            if (val0) { // USB接続にチェックが入ったとき
+                let val1 = this.wifiCheckBox.checked
+                if (val1) { // Wi-fi接続がオンのとき
+                    
+
+                }
+
             }
         })
 
@@ -215,8 +242,24 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
 
         // ダウンロードを終了したとき
         ipcRenderer.on("download_end", (event, args) => {
-            this.enable();
             this.indicator.hide();
+
+            // デバイスの接続を確認する
+            let execController = ExecController.getInstance();
+            execController.isDeviceConnected(
+                () => {
+                    this.enable();
+                    this.deviceStatusLabel.innerText = "Device Ready"
+                    this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow")
+                    this.usbCheckBox.checked = true;
+                },
+                () => { 
+                    this.disenable();
+                    this.deviceStatusLabel.innerText = "Device Not Ready"
+                    this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                    ipcRenderer.send('device_disconected');
+                 }
+            );
         })
 
         // デバイスの接続を確認できたとき

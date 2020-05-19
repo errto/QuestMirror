@@ -114,11 +114,10 @@ export default class ExecController {
         
         cp.stdout.setEncoding('utf-8');
         cp.stdout.on('data', function (data) {
-            let consoleOut = String(data);
-            if(consoleOut.indexOf("Quest") < 0) { // 接続されていなかったとき
-                failerCallback();
+            if(String(data).indexOf("Quest") < 0) { // 接続されていなかったとき
                 let args = ["/im", "adb.exe"]
                 child.spawn("taskkill", args)
+                failerCallback();
             } else {
                 successCallback();
             }
@@ -152,13 +151,21 @@ export default class ExecController {
     }
 
     // TCP/IPで接続する
-    private connectTCPIP(): void {
+    private connectTCPIP(successCallback: Function,
+        failerCallback: Function): void {
         const path: string = __dirname;
         let cmd = '/scrcpy/adb.exe';
-        let cp = child.spawn(path + cmd, ["tcpip","5555"]);
-        cp.stdout.setEncoding('utf-8');
-        cp.on("close", () => {
-            child.spawn(path + cmd, ["connect", this.ip+ ":5555"]);
+        let cp0 = child.spawn(path + cmd, ["tcpip","5555"]);
+        cp0.stdout.setEncoding('utf-8');
+        cp0.on("close", () => {
+            let cp1 = child.spawn(path + cmd, ["connect", this.ip+ ":5555"]);
+            cp1.on("close", () => {
+                successCallback();
+            })
+            cp1.on("error", () => {
+                failerCallback();
+            })
+
         })
     }
 
@@ -170,11 +177,21 @@ export default class ExecController {
     }
 
     // ワイアレス接続する 
-    public connectWireless(): void {
+    public connectWireless(successCallback: Function,
+        failerCallback: Function): void {
         this.getIP(
-            () => { this.connectTCPIP(); },
-            () => {}
+            () => { 
+                this.connectTCPIP(successCallback, failerCallback);
+            },
+            () => {
+                failerCallback()
+            }
         );
+    }
+
+    // ワイアレス接続を解除する
+    public disconnectWireless(): void {
+        
     }
 
     // scrcpyを実行する

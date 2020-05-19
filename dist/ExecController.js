@@ -93,12 +93,10 @@ var ExecController = /** @class */ (function () {
         var cp = child.spawn(path + cmd, ["devices", "-l"]);
         cp.stdout.setEncoding('utf-8');
         cp.stdout.on('data', function (data) {
-            var consoleOut = String(data);
-            console.log(consoleOut);
-            if (consoleOut.indexOf("Quest") < 0) { // 接続されていなかったとき
-                failerCallback();
+            if (String(data).indexOf("Quest") < 0) { // 接続されていなかったとき
                 var args = ["/im", "adb.exe"];
                 child.spawn("taskkill", args);
+                failerCallback();
             }
             else {
                 successCallback();
@@ -121,7 +119,6 @@ var ExecController = /** @class */ (function () {
             for (var i = 0; i < strLines.length; i++) {
                 if (strLines[i].indexOf("ip_address") >= 0) {
                     _this.ip = strLines[i].slice(11);
-                    console.log("ip_address:" + _this.ip);
                     successCallback();
                     return;
                 }
@@ -130,17 +127,20 @@ var ExecController = /** @class */ (function () {
         });
     };
     // TCP/IPで接続する
-    ExecController.prototype.connectTCPIP = function () {
+    ExecController.prototype.connectTCPIP = function (successCallback, failerCallback) {
         var _this = this;
         var path = __dirname;
         var cmd = '/scrcpy/adb.exe';
-        var cp = child.spawn(path + cmd, ["tcpip", "5555"]);
-        cp.stdout.setEncoding('utf-8');
-        cp.stdout.on('data', function (data) {
-            console.log(String(data));
-        });
-        cp.on("close", function () {
-            child.spawn(path + cmd, ["connect", _this.ip + ":5555"]);
+        var cp0 = child.spawn(path + cmd, ["tcpip", "5555"]);
+        cp0.stdout.setEncoding('utf-8');
+        cp0.on("close", function () {
+            var cp1 = child.spawn(path + cmd, ["connect", _this.ip + ":5555"]);
+            cp1.on("close", function () {
+                successCallback();
+            });
+            cp1.on("error", function () {
+                failerCallback();
+            });
         });
     };
     // デバイスとの接続を切る
@@ -150,9 +150,16 @@ var ExecController = /** @class */ (function () {
         child.spawn(path + cmd, ["disconnect"]);
     };
     // ワイアレス接続する 
-    ExecController.prototype.connectWireless = function () {
+    ExecController.prototype.connectWireless = function (successCallback, failerCallback) {
         var _this = this;
-        this.getIP(function () { _this.connectTCPIP(); }, function () { });
+        this.getIP(function () {
+            _this.connectTCPIP(successCallback, failerCallback);
+        }, function () {
+            failerCallback();
+        });
+    };
+    // ワイアレス接続を解除する
+    ExecController.prototype.disconnectWireless = function () {
     };
     // scrcpyを実行する
     ExecController.prototype.executeScrcpy = function (args) {

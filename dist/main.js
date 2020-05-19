@@ -108,6 +108,19 @@ electron_1.app.on('ready', function () {
             }
         });
     }); });
+    // デバイスがワイアレス接続されたとき
+    electron_1.ipcMain.on("device_wireless_connected", function () {
+        if (mainWindow) {
+            var options = {
+                title: 'Device is connected',
+                type: 'info',
+                buttons: ['OK'],
+                message: 'Device is connected wirelessly!',
+                detail: "Please unplug USB cable."
+            };
+            electron_1.dialog.showMessageBox(mainWindow, options);
+        }
+    });
     // UIControllerの設定が完了したとき
     electron_1.ipcMain.on("UIController_is_ready", function () {
         if (downloader.getHasDownloaded()) {
