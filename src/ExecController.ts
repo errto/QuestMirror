@@ -44,17 +44,21 @@ export default class ExecController {
     // ミラーリングを開始する
     public startMirroring(): void {
 
-        this.isDeviceConnected(
-            () => {
-                let args = this.settings.toArgs()
-                console.log(args)
-                this.executeScrcpy(args);
-            },
-            () => {
-                if(this.listener) {
-                    this.listener.onDeviceDisconected()
-                }
-            })
+        if (this.settings.isWireless) {
+            let args = this.settings.toArgs()
+            this.executeScrcpy(args);
+        } else {
+            this.isDeviceConnected(
+                () => {
+                    let args = this.settings.toArgs()
+                    this.executeScrcpy(args);
+                },
+                () => {
+                    if(this.listener) {
+                        this.listener.onDeviceDisconected()
+                    }
+                })
+        }
     }
 
     // ミラーリングを停止する

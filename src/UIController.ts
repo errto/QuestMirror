@@ -211,6 +211,7 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
                 this.deviceStatusIcon.hidden = true;
                 ExecController.getInstance().connectWireless(
                     () => { // Wi-FI接続に成功したとき
+                        this.enable();
                         this.usbCheckBox.checked = false;
                         this.deviceStatusLabel.innerText = "Device Ready"
                         this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow")

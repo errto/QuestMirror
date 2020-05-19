@@ -160,6 +160,7 @@ var UIContoller = /** @class */ (function () {
                 _this.deviceStatusLabel.innerText = "Connecting...";
                 _this.deviceStatusIcon.hidden = true;
                 ExecController_1.default.getInstance().connectWireless(function () {
+                    _this.enable();
                     _this.usbCheckBox.checked = false;
                     _this.deviceStatusLabel.innerText = "Device Ready";
                     _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");

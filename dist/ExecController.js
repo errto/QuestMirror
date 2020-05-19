@@ -37,15 +37,20 @@ var ExecController = /** @class */ (function () {
     // ミラーリングを開始する
     ExecController.prototype.startMirroring = function () {
         var _this = this;
-        this.isDeviceConnected(function () {
-            var args = _this.settings.toArgs();
-            console.log(args);
-            _this.executeScrcpy(args);
-        }, function () {
-            if (_this.listener) {
-                _this.listener.onDeviceDisconected();
-            }
-        });
+        if (this.settings.isWireless) {
+            var args = this.settings.toArgs();
+            this.executeScrcpy(args);
+        }
+        else {
+            this.isDeviceConnected(function () {
+                var args = _this.settings.toArgs();
+                _this.executeScrcpy(args);
+            }, function () {
+                if (_this.listener) {
+                    _this.listener.onDeviceDisconected();
+                }
+            });
+        }
     };
     // ミラーリングを停止する
     ExecController.prototype.stopMirroring = function () {

@@ -88,7 +88,7 @@ electron_1.app.on('ready', function () {
                             _a.sent();
                             setTimeout(function () {
                                 mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
-                            }, 1000);
+                            }, 2500);
                             return [2 /*return*/];
                     }
                 });
@@ -97,7 +97,7 @@ electron_1.app.on('ready', function () {
     }
     // デバイスが接続されてないとき
     electron_1.ipcMain.on("device_disconected", function () { return __awaiter(void 0, void 0, void 0, function () {
-        var options, execController;
+        var options, result, execController;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -105,15 +105,20 @@ electron_1.app.on('ready', function () {
                     options = {
                         title: 'No device is connected',
                         type: 'info',
-                        buttons: ['OK'],
+                        buttons: ['OK', 'Cancel'],
                         message: 'No device is connected.',
                         detail: "Please connect your Oculus Quest device via USB cable."
                     };
                     return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
                 case 1:
-                    _a.sent();
-                    execController = ExecController_1.default.getInstance();
-                    execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+                    result = _a.sent();
+                    if (result.response == 1) { // アプリを閉じるとき
+                        electron_1.app.quit();
+                    }
+                    else {
+                        execController = ExecController_1.default.getInstance();
+                        execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+                    }
                     _a.label = 2;
                 case 2: return [2 /*return*/];
             }

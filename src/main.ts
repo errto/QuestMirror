@@ -60,16 +60,20 @@ app.on('ready', () => {
             var options = {
                 title: 'No device is connected',
                 type: 'info',
-                buttons: ['OK'],
+                buttons: ['OK', 'Cancel'],
                 message: 'No device is connected.',
                 detail: "Please connect your Oculus Quest device via USB cable."
             };
-            await dialog.showMessageBox(mainWindow, options);
-            let execController = ExecController.getInstance();
-            execController.isDeviceConnected(
-                () => { mainWindow?.webContents.send("device_conected") },
-                () => { mainWindow?.webContents.send("device_disconected") }
-            );
+            let result = await dialog.showMessageBox(mainWindow, options);
+            if (result.response == 1) { // アプリを閉じるとき
+                app.quit()
+            } else {
+                let execController = ExecController.getInstance();
+                execController.isDeviceConnected(
+                    () => { mainWindow?.webContents.send("device_conected") },
+                    () => { mainWindow?.webContents.send("device_disconected") }
+                );
+            }
         }
     })
 
