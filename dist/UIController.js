@@ -200,6 +200,7 @@ var UIContoller = /** @class */ (function () {
         electron_1.ipcRenderer.on("download_start", function (event, args) {
             _this.disenable();
             _this.indicator.show();
+            _this.deviceStatusIcon.hidden = true;
         });
         // ダウンロードを終了したとき
         electron_1.ipcRenderer.on("download_end", function (event, args) {
@@ -211,10 +212,12 @@ var UIContoller = /** @class */ (function () {
                 _this.deviceStatusLabel.innerText = "Device Ready";
                 _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
                 _this.usbCheckBox.checked = true;
+                _this.deviceStatusIcon.hidden = false;
             }, function () {
                 _this.disenable();
                 _this.deviceStatusLabel.innerText = "Device Not Ready";
                 _this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                _this.deviceStatusIcon.hidden = false;
                 electron_1.ipcRenderer.send('device_disconected');
             });
         });
@@ -263,7 +266,6 @@ var UIContoller = /** @class */ (function () {
     // ミラーリングが停止したとき
     // scrcpyが直接停止した時に呼び出される
     UIContoller.prototype.onEndMirroring = function () {
-        console.log("UIContoroller.onEndMirroring");
         var imgStart = document.getElementById("mirroring_start_image");
         imgStart.src = "./resources/icon/ico_play.png";
         var imgStop = document.getElementById("mirroring_stop_image");

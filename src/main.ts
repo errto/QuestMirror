@@ -43,11 +43,13 @@ app.on('ready', () => {
         result.then((res) => {
             let mrv = <Electron.MessageBoxReturnValue>res
             mainWindow?.webContents.send("download_start");
-            downloader.downloadAssets(() => {
+            downloader.downloadAssets(async () => {
                 const dstpath: string = __dirname +  "\\scrcpy";
                 const srcpath: string = __dirname + "\\scrcpy.zip";
-                downloader.unzipFile(srcpath, dstpath);
-                mainWindow?.webContents.send("download_end")
+                await downloader.unzipFile(srcpath, dstpath);
+                setTimeout(() => {
+                    mainWindow?.webContents.send("download_end")
+                }, 2500)
             });
         });
     }

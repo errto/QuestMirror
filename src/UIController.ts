@@ -258,6 +258,7 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
         ipcRenderer.on("download_start", (event, args) => {
             this.disenable();
             this.indicator.show();
+            this.deviceStatusIcon.hidden = true;
         })
 
         // ダウンロードを終了したとき
@@ -272,11 +273,13 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
                     this.deviceStatusLabel.innerText = "Device Ready"
                     this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow")
                     this.usbCheckBox.checked = true;
+                    this.deviceStatusIcon.hidden = false;
                 },
                 () => { 
                     this.disenable();
                     this.deviceStatusLabel.innerText = "Device Not Ready"
                     this.deviceStatusIcon.setAttribute("style", "background-color: red");
+                    this.deviceStatusIcon.hidden = false;
                     ipcRenderer.send('device_disconected');
                  }
             );

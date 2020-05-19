@@ -200,7 +200,6 @@ var ExecController = /** @class */ (function () {
     // scrcpyを起動する
     ExecController.prototype.startScrcpy = function (args) {
         var _this = this;
-        console.log("startScrcpy");
         var path = __dirname;
         var cmd = '/scrcpy/scrcpy.exe';
         this.childProcess = child.spawn(path + cmd, args);
@@ -208,7 +207,6 @@ var ExecController = /** @class */ (function () {
         // closeしたとき
         this.childProcess.on('close', function (code) {
             var _a;
-            console.log("close scrcpy");
             if (_this.isMirroring) { //  scrcpyを直接閉じたとき
                 _this.isMirroring = false;
                 (_a = _this.listener) === null || _a === void 0 ? void 0 : _a.onEndMirroring();

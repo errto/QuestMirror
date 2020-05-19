@@ -62,7 +62,6 @@ electron_1.app.on('ready', function () {
     });
     // htmlをロード
     mainWindow.loadURL('file://' + __dirname + '/index.html');
-    mainWindow.webContents.openDevTools();
     // scrcpyをダウンロードする
     var downloader = AssetsDownloader_1.default.getInstance();
     if (!downloader.getHasDownloaded()) { // scrcpyがダウンロードされていないとき
@@ -77,12 +76,23 @@ electron_1.app.on('ready', function () {
         result.then(function (res) {
             var mrv = res;
             mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_start");
-            downloader.downloadAssets(function () {
-                var dstpath = __dirname + "\\scrcpy";
-                var srcpath = __dirname + "\\scrcpy.zip";
-                downloader.unzipFile(srcpath, dstpath);
-                mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
-            });
+            downloader.downloadAssets(function () { return __awaiter(void 0, void 0, void 0, function () {
+                var dstpath, srcpath;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            dstpath = __dirname + "\\scrcpy";
+                            srcpath = __dirname + "\\scrcpy.zip";
+                            return [4 /*yield*/, downloader.unzipFile(srcpath, dstpath)];
+                        case 1:
+                            _a.sent();
+                            setTimeout(function () {
+                                mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
+                            }, 1000);
+                            return [2 /*return*/];
+                    }
+                });
+            }); });
         });
     }
     // デバイスが接続されてないとき
