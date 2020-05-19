@@ -156,14 +156,17 @@ var UIContoller = /** @class */ (function () {
             if (val) { // Wi-Fi接続にチェックがはいったとき
                 _this.disenable();
                 _this.deviceStatusLabel.innerText = "Connecting...";
+                _this.deviceStatusIcon.hidden = true;
                 ExecController_1.default.getInstance().connectWireless(function () {
                     _this.usbCheckBox.checked = false;
                     _this.deviceStatusLabel.innerText = "Device Ready";
                     _this.deviceStatusIcon.setAttribute("style", "background-color: greenyellow");
+                    _this.deviceStatusIcon.hidden = false;
                     electron_1.ipcRenderer.send("device_wireless_connected");
                 }, function () {
                     _this.wifiCheckBox.checked = false;
                     _this.deviceStatusLabel.innerText = "Device Not Ready";
+                    _this.deviceStatusIcon.hidden = false;
                     _this.deviceStatusIcon.setAttribute("style", "background-color: red");
                 });
             }
