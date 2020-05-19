@@ -54,6 +54,7 @@ electron_1.app.on('ready', function () {
         height: 600,
     });
     mainWindow.removeMenu();
+    mainWindow.webContents.openDevTools();
     // ウィンドウが閉じたとき
     mainWindow.on('closed', function () {
         mainWindow = null;
