@@ -13,7 +13,7 @@ This app calls scrcpy from Electron for easy mirroring by kids and anyone.
 It is better to use the pre-built package of links for easier execution.
 Unzip the zip file and click **QuestMirror.exe** in the unzipped folder.
 
-Pre-build: https://github.com/r-asada-ab/QuestMirror/releases/download/v1.0.0/quest-mirror-win32-x64.zip
+Pre-build: https://github.com/r-asada-ab/QuestMirror/releases/download/v1.1.0/quest-mirror-win32-x64.zip
 
 ## Build 
 
@@ -44,6 +44,8 @@ Wait for the download to complete.
 Once downloaded, connect Oculus Quest to your PC. At this time, keep Oculus Quest in developer mode.
 
 After connecting Oculus Quest, press the play button to start mirroring.
+
+When performing wireless mirroring, press the radio button labeled Wi-Fi and the app will attempt to connect to Quest. When the connection is complete, disconnect the cable and press the play button to start mirroring.
 
 # Configuration
 
