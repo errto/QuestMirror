@@ -77,7 +77,6 @@ var AssetsDownloader = /** @class */ (function () {
     // httpsリクエストを投げる
     AssetsDownloader.prototype.requestHttps = function (url, savePath, callback) {
         var _this = this;
-        if (callback === void 0) { callback = null; }
         var request = https_1.default.get(url, function (res) {
             var resMessage = res;
             if (resMessage.statusCode == 200) { // ダウンロードするとき

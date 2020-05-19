@@ -45,7 +45,7 @@ export default class AssetsDownloader {
     }
 
     // httpsリクエストを投げる
-    private requestHttps(url: string, savePath: string, callback: Function | null = null): void {
+    private requestHttps(url: string, savePath: string, callback: Function): void {
         let request = https.get(url, (res) => {
             let resMessage = <IncomingMessage>res
             if (resMessage.statusCode == 200) { // ダウンロードするとき
@@ -69,8 +69,8 @@ export default class AssetsDownloader {
     public async unzipFile(srcPath: string, dstPath: string): Promise<void> {
         try {
             await extract(srcPath, { dir: dstPath })
-          } catch (err) {
+        } catch (err) {
             console.error('Extraction failed.')
-          }
+        }
     }
 }
