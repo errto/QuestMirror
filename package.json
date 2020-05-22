@@ -4,7 +4,8 @@
   "description": "A GUI application with scrcpy for mirroing Oculus Quest.",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && electron ./dist/main.js"
+    "start": "npm run build && electron ./dist/main.js",
+    "startmac": "npm run build && npx electron ./dist/main.js"
   },
   "author": "r-asada-ab",
   "license": "Apache-2.0",
