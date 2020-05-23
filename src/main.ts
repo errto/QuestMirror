@@ -1,12 +1,13 @@
 import {app, BrowserWindow, dialog, ipcMain} from 'electron'
-import AssetsDownloader from './AssetsDownloader'
 import ExecController from './ExecController'
+import OAL from './OAL'
+import PackageDownloader from './PackageDownloader'
 
 // メインウィンドウ
 let mainWindow: Electron.BrowserWindow | null = null
 
 // アプリが起動するとき
-app.on('ready', () => {
+app.on('ready', async () => {
     
     // メインウィンドウを生成
     mainWindow = new BrowserWindow({
@@ -27,32 +28,7 @@ app.on('ready', () => {
     
     // htmlをロード
     mainWindow.loadURL('file://' + __dirname + '/index.html')
-
-    // scrcpyをダウンロードする
-    let downloader = AssetsDownloader.getInstance();
-    if (!downloader.getHasDownloaded()) { // scrcpyがダウンロードされていないとき
-        var options = {
-            title: 'Download',
-            type: 'info',
-            buttons: ['OK'],
-            message: 'scrcpy is required',
-            detail: "This App need scrcpy(https://github.com/Genymobile/scrcpy). Press button to download it."
-        };
-        let result = dialog.showMessageBox(mainWindow, options);
-
-        result.then((res) => {
-            let mrv = <Electron.MessageBoxReturnValue>res
-            mainWindow?.webContents.send("download_start");
-            downloader.downloadAssets(async () => {
-                const dstpath: string = __dirname +  "\\scrcpy";
-                const srcpath: string = __dirname + "\\scrcpy.zip";
-                await downloader.unzipFile(srcpath, dstpath);
-                setTimeout(() => {
-                    mainWindow?.webContents.send("download_end")
-                }, 2500)
-            });
-        });
-    }
+    mainWindow.webContents.openDevTools();
 
     // デバイスが接続されてないとき
     ipcMain.on("device_disconected", async () => {
@@ -92,8 +68,9 @@ app.on('ready', () => {
     })
 
     // UIControllerの設定が完了したとき
-    ipcMain.on("UIController_is_ready", () => {
-        if (downloader.getHasDownloaded()) {
+    ipcMain.on("UIController_is_ready", async () => {
+        let hasDownloaded = await downloader.getHasDownloaded()
+        if (hasDownloaded) {
             let execController = ExecController.getInstance();
             execController.isDeviceConnected(
                 () => { mainWindow?.webContents.send("device_conected") },
@@ -136,4 +113,41 @@ app.on('ready', () => {
             dialog.showMessageBox(mainWindow, options);
         }
     })
+
+    // scrcpyをダウンロードする
+    let downloader = PackageDownloader.getInstance();
+    let hasDownloaded = await downloader.getHasDownloaded(); 
+    if (!hasDownloaded) { // 必要なパッケージがダウンロードされていないとき
+        // ダウンロードダイアログを表示する
+        let requirePackages = downloader.getRequirePackages();
+        let detail = ""
+        for (let i = 0; i < requirePackages.length; i++) {
+            if (OAL.getInstance().isMac()) {
+                detail += requirePackages[i].toString() + "\n"
+            } else {
+                detail += requirePackages[i].toString() + "\r\n"
+            }
+        }
+        detail += "\n" + "Press button to download it."
+        console.log(detail)
+
+        var options = {
+            title: 'Download',
+            type: 'info',
+            buttons: ['OK'],
+            message: 'This app requires the following packages',
+            detail: detail
+        };
+        let result = dialog.showMessageBox(mainWindow, options);
+
+        // ダウンロードを開始する
+        result.then((res) => {
+            mainWindow?.webContents.send("download_start");
+            downloader.downloadPackages(() => {
+                setTimeout(() => { 
+                    mainWindow?.webContents.send("download_end")
+                }, 2500)
+            });
+        });
+    }
 })

@@ -39,15 +39,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var extract_zip_1 = __importDefault(require("extract-zip"));
-var fs_1 = __importDefault(require("fs"));
-var https_1 = __importDefault(require("https"));
 var OAL_1 = __importDefault(require("./OAL"));
 // scrcpyのassetsのダウンローダー
 var PackageDownloader = /** @class */ (function () {
     // コンストラクタ
     function PackageDownloader() {
-        this.hasDonwnloaded = false;
+        this.requirePackages = [];
     }
     // インスタンスを取得する
     PackageDownloader.getInstance = function () {
@@ -56,69 +53,36 @@ var PackageDownloader = /** @class */ (function () {
         }
         return this.instance;
     };
+    // ダウンロードが必要なパッケージを返す
+    PackageDownloader.prototype.getRequirePackages = function () {
+        return this.requirePackages;
+    };
     // ダウンロード済みか
     PackageDownloader.prototype.getHasDownloaded = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var packages, i;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         console.log("PackageDownloader.getHasDownloaded()");
-                        _a = this;
-                        return [4 /*yield*/, OAL_1.default.getInstance().canLaunchScrcpy()];
+                        return [4 /*yield*/, OAL_1.default.getInstance().checkPackages()];
                     case 1:
-                        _a.hasDonwnloaded = _b.sent();
-                        return [2 /*return*/, this.hasDonwnloaded];
+                        packages = _a.sent();
+                        if (packages.length == 0) {
+                            return [2 /*return*/, true];
+                        }
+                        this.requirePackages = packages;
+                        for (i = 0; i < this.requirePackages.length; i++) {
+                            console.log("PackageDownloader.getHasDownloaded() required package: " + packages[i].toString());
+                        }
+                        return [2 /*return*/, false];
                 }
             });
         });
     };
     // assetsをダウンロードする
-    PackageDownloader.prototype.downloadAssets = function (callback) {
-        OAL_1.default.getInstance().downloadScrcpy(callback);
-    };
-    // httpsリクエストを投げる
-    PackageDownloader.prototype.requestHttps = function (url, savePath, callback) {
-        var _this = this;
-        var request = https_1.default.get(url, function (res) {
-            var resMessage = res;
-            if (resMessage.statusCode == 200) { // ダウンロードするとき
-                var file = fs_1.default.createWriteStream(savePath);
-                res.on('data', function (chunk) {
-                    file.write(chunk);
-                }).on('end', function () {
-                    file.end();
-                    if (callback) {
-                        callback();
-                    }
-                });
-            }
-            else if (resMessage.statusCode == 302) { // リダイレクトするとき
-                var redirectUrl = res.headers.location;
-                _this.requestHttps(redirectUrl, savePath, callback);
-            }
-        });
-    };
-    // zipファイルを解凍する
-    PackageDownloader.prototype.unzipFile = function (srcPath, dstPath) {
-        return __awaiter(this, void 0, void 0, function () {
-            var err_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, extract_zip_1.default(srcPath, { dir: dstPath })];
-                    case 1:
-                        _a.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        err_1 = _a.sent();
-                        console.error('Extraction failed.');
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
+    PackageDownloader.prototype.downloadPackages = function (callback) {
+        OAL_1.default.getInstance().downloadPackages(this.requirePackages, callback);
     };
     return PackageDownloader;
 }());
