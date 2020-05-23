@@ -319,7 +319,6 @@ var UIContoller = /** @class */ (function () {
     };
     // ディレクトリが選択されているか
     UIContoller.prototype.isCaptureDirectroySelected = function () {
-        console.log(this.directorySelectButton.innerText);
         return this.directorySelectButton.innerText != "No Directory Selected";
     };
     // ミラーリングを開始する

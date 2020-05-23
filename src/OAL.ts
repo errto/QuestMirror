@@ -30,7 +30,6 @@ export default class OAL {
 
     // Macか
     public isMac(): boolean {
-        console.log("OAL.isMac() process.platform:" + process.platform)
         return process.platform == "darwin"
     }
 
@@ -73,8 +72,6 @@ export default class OAL {
 
                 if (p.getName() == "adb") {
                     await execFile("brew", ["cask", "install", "android-platform-tools"]);
-                    await execFile("export", ["PATH=$PATH:/usr/local/share/android-sdk/platform-tools"]);
-                    await execFile("source", [".bash_profile"]);
                 }
 
                 if (p.getName() == "scrcpy") {
@@ -149,11 +146,9 @@ export default class OAL {
         let result = await execFile(cmd, ["-s", deviceSerial, "shell", "dumpsys", "wifi"]);
 
         let strLines = StringUtil.getLines(result.stdout)
-        console.log(strLines);
         for (let i = 0; i < strLines.length; i++) {
             if (strLines[i].indexOf("ip_address") >= 0) {
                 let ip = strLines[i].slice(11);
-                console.log(ip);
                 return ip
             }
         }
@@ -229,7 +224,6 @@ export default class OAL {
     // scrcpyが起動するか
     private async checkScrcpy(): Promise<Package | null> {
         if (this.isMac()) { // Macのとき
-            console.log("OAL.checkSrccpy() mac")
             let result = await execFile("scrcpy", ["-v"]).catch((error) => {
                 return new Package("scrcpy", "https://github.com/Genymobile/scrcpy");
             })
@@ -240,7 +234,6 @@ export default class OAL {
                 return null;
             }
         } else { // Windowsのとき
-            console.log("OAL.checkSrccpy() win")
             const path: string = __dirname + "\\scrcpy\\scrcpy.exe";
             try {
                 fs.statSync(path)
@@ -253,7 +246,6 @@ export default class OAL {
 
     // adbが起動するか
     private async checkAdb(): Promise<Package | null> {
-        console.log("OAL.checkAdb() mac")
         let result = await execFile("adb", ["--version"]).catch((error) => {
             return new Package("adb", "https://developer.android.com/studio/command-line/adb?hl=en");
         })
@@ -282,7 +274,6 @@ export default class OAL {
                 let st = 0;
                 let ed = strLines[i].indexOf(" ");
                 let deviceSerial = strLines[i].slice(st, ed);
-                console.log(deviceSerial)
                 return deviceSerial
             }
         }
@@ -294,14 +285,10 @@ export default class OAL {
         let result = await execFile("ps", ["aux"]);
         let strLines = StringUtil.getLines(result.stdout);
         for (let i = 0; i < strLines.length; i++) {
-            console.log(strLines[i]);
             if (strLines[i].indexOf("scrcpy -s") > 0) {
                 let st = strLines[i].indexOf(" ");
-                console.log("OAL.getPID() st:" + st)
                 let ed = strLines[i].indexOf(" ", st + 2);
-                console.log("OAL.getPID() ed:" + ed)
                 let pid = strLines[i].slice(st, ed);
-                console.log("OAL.getPID() pid:" + pid)
                 return pid
             }
         }

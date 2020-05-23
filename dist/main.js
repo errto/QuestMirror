@@ -40,14 +40,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
-var PackageDownloader_1 = __importDefault(require("./PackageDownloader"));
 var ExecController_1 = __importDefault(require("./ExecController"));
 var OAL_1 = __importDefault(require("./OAL"));
+var PackageDownloader_1 = __importDefault(require("./PackageDownloader"));
 // メインウィンドウ
 var mainWindow = null;
 // アプリが起動するとき
 electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0, function () {
-    var downloader, hasDownloded, requirePackages, detail, i, options, result;
+    var downloader, hasDownloaded, requirePackages, detail, i, options, result;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -67,7 +67,6 @@ electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0
                 });
                 // htmlをロード
                 mainWindow.loadURL('file://' + __dirname + '/index.html');
-                mainWindow.webContents.openDevTools();
                 // デバイスが接続されてないとき
                 electron_1.ipcMain.on("device_disconected", function () { return __awaiter(void 0, void 0, void 0, function () {
                     var options, result, execController;
@@ -112,13 +111,13 @@ electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0
                 });
                 // UIControllerの設定が完了したとき
                 electron_1.ipcMain.on("UIController_is_ready", function () { return __awaiter(void 0, void 0, void 0, function () {
-                    var hasDownloded, execController;
+                    var hasDownloaded, execController;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, downloader.getHasDownloaded()];
                             case 1:
-                                hasDownloded = _a.sent();
-                                if (hasDownloded) {
+                                hasDownloaded = _a.sent();
+                                if (hasDownloaded) {
                                     execController = ExecController_1.default.getInstance();
                                     execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
                                 }
@@ -179,8 +178,8 @@ electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0
                 downloader = PackageDownloader_1.default.getInstance();
                 return [4 /*yield*/, downloader.getHasDownloaded()];
             case 1:
-                hasDownloded = _a.sent();
-                if (!hasDownloded) { // 必要なパッケージがダウンロードされていないとき
+                hasDownloaded = _a.sent();
+                if (!hasDownloaded) { // 必要なパッケージがダウンロードされていないとき
                     requirePackages = downloader.getRequirePackages();
                     detail = "";
                     for (i = 0; i < requirePackages.length; i++) {
@@ -192,7 +191,6 @@ electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0
                         }
                     }
                     detail += "\n" + "Press button to download it.";
-                    console.log(detail);
                     options = {
                         title: 'Download',
                         type: 'info',

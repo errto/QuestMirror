@@ -28,7 +28,6 @@ app.on('ready', async () => {
     
     // htmlをロード
     mainWindow.loadURL('file://' + __dirname + '/index.html')
-    mainWindow.webContents.openDevTools();
 
     // デバイスが接続されてないとき
     ipcMain.on("device_disconected", async () => {
@@ -129,7 +128,6 @@ app.on('ready', async () => {
             }
         }
         detail += "\n" + "Press button to download it."
-        console.log(detail)
 
         var options = {
             title: 'Download',

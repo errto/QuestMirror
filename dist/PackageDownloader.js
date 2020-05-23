@@ -60,21 +60,16 @@ var PackageDownloader = /** @class */ (function () {
     // ダウンロード済みか
     PackageDownloader.prototype.getHasDownloaded = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var packages, i;
+            var packages;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        console.log("PackageDownloader.getHasDownloaded()");
-                        return [4 /*yield*/, OAL_1.default.getInstance().checkPackages()];
+                    case 0: return [4 /*yield*/, OAL_1.default.getInstance().checkPackages()];
                     case 1:
                         packages = _a.sent();
                         if (packages.length == 0) {
                             return [2 /*return*/, true];
                         }
                         this.requirePackages = packages;
-                        for (i = 0; i < this.requirePackages.length; i++) {
-                            console.log("PackageDownloader.getHasDownloaded() required package: " + packages[i].toString());
-                        }
                         return [2 /*return*/, false];
                 }
             });

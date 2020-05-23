@@ -29,15 +29,11 @@ export default class PackageDownloader {
 
     // ダウンロード済みか
     public async getHasDownloaded(): Promise<boolean> {
-        console.log("PackageDownloader.getHasDownloaded()");
         let packages = await OAL.getInstance().checkPackages();
         if (packages.length == 0) {
             return true;
         }
         this.requirePackages = packages;
-        for (let i = 0; i < this.requirePackages.length; i++) {
-            console.log("PackageDownloader.getHasDownloaded() required package: " + packages[i].toString());
-        }
         return false
     }
 

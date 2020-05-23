@@ -80,7 +80,6 @@ var OAL = /** @class */ (function () {
     };
     // Macか
     OAL.prototype.isMac = function () {
-        console.log("OAL.isMac() process.platform:" + process.platform);
         return process.platform == "darwin";
     };
     // パッケージをチェックする
@@ -131,11 +130,11 @@ var OAL = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.isMac()) return [3 /*break*/, 11];
+                        if (!this.isMac()) return [3 /*break*/, 9];
                         i = 0;
                         _a.label = 1;
                     case 1:
-                        if (!(i < packages.length)) return [3 /*break*/, 10];
+                        if (!(i < packages.length)) return [3 /*break*/, 8];
                         p = packages[i];
                         if (!(p.getName() == "homebrew")) return [3 /*break*/, 3];
                         return [4 /*yield*/, execFile("curl", ["-fsSL", "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"])];
@@ -143,30 +142,24 @@ var OAL = /** @class */ (function () {
                         _a.sent();
                         _a.label = 3;
                     case 3:
-                        if (!(p.getName() == "adb")) return [3 /*break*/, 7];
+                        if (!(p.getName() == "adb")) return [3 /*break*/, 5];
                         return [4 /*yield*/, execFile("brew", ["cask", "install", "android-platform-tools"])];
                     case 4:
                         _a.sent();
-                        return [4 /*yield*/, execFile("export", ["PATH=$PATH:/usr/local/share/android-sdk/platform-tools"])];
+                        _a.label = 5;
                     case 5:
-                        _a.sent();
-                        return [4 /*yield*/, execFile("source", [".bash_profile"])];
+                        if (!(p.getName() == "scrcpy")) return [3 /*break*/, 7];
+                        return [4 /*yield*/, execFile("brew", ["install", "scrcpy"])];
                     case 6:
                         _a.sent();
                         _a.label = 7;
                     case 7:
-                        if (!(p.getName() == "scrcpy")) return [3 /*break*/, 9];
-                        return [4 /*yield*/, execFile("brew", ["install", "scrcpy"])];
-                    case 8:
-                        _a.sent();
-                        _a.label = 9;
-                    case 9:
                         i++;
                         return [3 /*break*/, 1];
-                    case 10:
+                    case 8:
                         callback();
-                        return [3 /*break*/, 12];
-                    case 11:
+                        return [3 /*break*/, 10];
+                    case 9:
                         url = "https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip";
                         path = __dirname + "\\scrcpy.zip";
                         this.requestHttps(url, path, function () {
@@ -175,8 +168,8 @@ var OAL = /** @class */ (function () {
                             _this.unzipFile(srcpath, dstpath);
                             callback();
                         });
-                        _a.label = 12;
-                    case 12: return [2 /*return*/];
+                        _a.label = 10;
+                    case 10: return [2 /*return*/];
                 }
             });
         });
@@ -264,11 +257,9 @@ var OAL = /** @class */ (function () {
                     case 1:
                         result = _a.sent();
                         strLines = StringUtil_1.default.getLines(result.stdout);
-                        console.log(strLines);
                         for (i = 0; i < strLines.length; i++) {
                             if (strLines[i].indexOf("ip_address") >= 0) {
                                 ip = strLines[i].slice(11);
-                                console.log(ip);
                                 return [2 /*return*/, ip];
                             }
                         }
@@ -372,7 +363,6 @@ var OAL = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         if (!this.isMac()) return [3 /*break*/, 2];
-                        console.log("OAL.checkSrccpy() mac");
                         return [4 /*yield*/, execFile("scrcpy", ["-v"]).catch(function (error) {
                                 return new Package_1.default("scrcpy", "https://github.com/Genymobile/scrcpy");
                             })];
@@ -386,7 +376,6 @@ var OAL = /** @class */ (function () {
                         }
                         return [3 /*break*/, 3];
                     case 2:
-                        console.log("OAL.checkSrccpy() win");
                         path = __dirname + "\\scrcpy\\scrcpy.exe";
                         try {
                             fs_1.default.statSync(path);
@@ -406,11 +395,9 @@ var OAL = /** @class */ (function () {
             var result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        console.log("OAL.checkAdb() mac");
-                        return [4 /*yield*/, execFile("adb", ["--version"]).catch(function (error) {
-                                return new Package_1.default("adb", "https://developer.android.com/studio/command-line/adb?hl=en");
-                            })];
+                    case 0: return [4 /*yield*/, execFile("adb", ["--version"]).catch(function (error) {
+                            return new Package_1.default("adb", "https://developer.android.com/studio/command-line/adb?hl=en");
+                        })];
                     case 1:
                         result = _a.sent();
                         if (result instanceof Package_1.default) {
@@ -453,7 +440,6 @@ var OAL = /** @class */ (function () {
                 var st = 0;
                 var ed = strLines[i].indexOf(" ");
                 var deviceSerial = strLines[i].slice(st, ed);
-                console.log(deviceSerial);
                 return deviceSerial;
             }
         }
@@ -470,14 +456,10 @@ var OAL = /** @class */ (function () {
                         result = _a.sent();
                         strLines = StringUtil_1.default.getLines(result.stdout);
                         for (i = 0; i < strLines.length; i++) {
-                            console.log(strLines[i]);
                             if (strLines[i].indexOf("scrcpy -s") > 0) {
                                 st = strLines[i].indexOf(" ");
-                                console.log("OAL.getPID() st:" + st);
                                 ed = strLines[i].indexOf(" ", st + 2);
-                                console.log("OAL.getPID() ed:" + ed);
                                 pid = strLines[i].slice(st, ed);
-                                console.log("OAL.getPID() pid:" + pid);
                                 return [2 /*return*/, pid];
                             }
                         }

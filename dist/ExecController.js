@@ -39,8 +39,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var ScrcpySettings_1 = __importDefault(require("./ScrcpySettings"));
 var OAL_1 = __importDefault(require("./OAL"));
+var ScrcpySettings_1 = __importDefault(require("./ScrcpySettings"));
 // 外部アプリを管理するContorllerクラス
 var ExecController = /** @class */ (function () {
     // コンストラクタ
