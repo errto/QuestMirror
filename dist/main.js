@@ -47,7 +47,7 @@ var PackageDownloader_1 = __importDefault(require("./PackageDownloader"));
 var mainWindow = null;
 // アプリが起動するとき
 electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0, function () {
-    var downloader, hasDownloaded, requirePackages, detail, i, options, result;
+    var downloader, hasDownloaded, requirePackages, detail, options, result, detail, i, options, result;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -179,37 +179,66 @@ electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0
                 return [4 /*yield*/, downloader.getHasDownloaded()];
             case 1:
                 hasDownloaded = _a.sent();
-                if (!hasDownloaded) { // 必要なパッケージがダウンロードされていないとき
-                    requirePackages = downloader.getRequirePackages();
-                    detail = "";
-                    for (i = 0; i < requirePackages.length; i++) {
-                        if (OAL_1.default.getInstance().isMac()) {
-                            detail += requirePackages[i].toString() + "\n";
-                        }
-                        else {
-                            detail += requirePackages[i].toString() + "\r\n";
-                        }
+                if (!!hasDownloaded) return [3 /*break*/, 5];
+                requirePackages = downloader.getRequirePackages();
+                if (!(requirePackages[0].getName() == "homebrew")) return [3 /*break*/, 3];
+                detail = 'Please install Homebrew before launching this app.';
+                detail += "\n" + "\n";
+                detail += "Press OK button to open the Github page(https://github.com/r-asada-ab/QuestMirror).";
+                detail += "\n" + "\n";
+                detail += "Check Install on Mac.";
+                options = {
+                    title: 'Download',
+                    type: 'info',
+                    buttons: ['OK', 'Cancel'],
+                    message: 'This app requires Homebrew',
+                    detail: detail
+                };
+                return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
+            case 2:
+                result = _a.sent();
+                if (result.response == 0) { // アプリを閉じるとき
+                    electron_1.shell.openExternal("https://github.com/r-asada-ab/QuestMirror");
+                    electron_1.app.quit();
+                }
+                else {
+                    electron_1.app.quit();
+                }
+                return [3 /*break*/, 5];
+            case 3:
+                detail = "";
+                for (i = 0; i < requirePackages.length; i++) {
+                    if (OAL_1.default.getInstance().isMac()) {
+                        detail += requirePackages[i].toString() + "\n";
                     }
-                    detail += "\n" + "Press button to download it.";
-                    options = {
-                        title: 'Download',
-                        type: 'info',
-                        buttons: ['OK'],
-                        message: 'This app requires the following packages',
-                        detail: detail
-                    };
-                    result = electron_1.dialog.showMessageBox(mainWindow, options);
-                    // ダウンロードを開始する
-                    result.then(function (res) {
-                        mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_start");
-                        downloader.downloadPackages(function () {
-                            setTimeout(function () {
-                                mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
-                            }, 2500);
-                        });
+                    else {
+                        detail += requirePackages[i].toString() + "\r\n";
+                    }
+                }
+                detail += "\n" + "Press button to download it.";
+                options = {
+                    title: 'Download',
+                    type: 'info',
+                    buttons: ['OK', 'Cancel'],
+                    message: 'This app requires the following packages',
+                    detail: detail
+                };
+                return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
+            case 4:
+                result = _a.sent();
+                if (result.response == 1) { // アプリを閉じるとき
+                    electron_1.app.quit();
+                }
+                else {
+                    mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_start");
+                    downloader.downloadPackages(function () {
+                        setTimeout(function () {
+                            mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
+                        }, 2500);
                     });
                 }
-                return [2 /*return*/];
+                _a.label = 5;
+            case 5: return [2 /*return*/];
         }
     });
 }); });

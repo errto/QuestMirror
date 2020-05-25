@@ -66,6 +66,21 @@ var util_1 = require("util");
 var Package_1 = __importDefault(require("./Package"));
 var StringUtil_1 = __importDefault(require("./StringUtil"));
 var execFile = util_1.promisify(child.execFile);
+function spawn(cmd, args) {
+    return new Promise(function (resolve) {
+        var p = child.spawn(cmd, args);
+        p.on('exit', function (code) {
+            resolve();
+        });
+        p.stdout.setEncoding('utf-8');
+        p.stdout.on('data', function (data) {
+            console.log(data);
+        });
+        p.stderr.on('data', function (data) {
+            console.log(data);
+        });
+    });
+}
 // OS抽象化レイヤー
 var OAL = /** @class */ (function () {
     // コンストラクタ
@@ -130,36 +145,31 @@ var OAL = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.isMac()) return [3 /*break*/, 9];
+                        if (!this.isMac()) return [3 /*break*/, 7];
                         i = 0;
                         _a.label = 1;
                     case 1:
-                        if (!(i < packages.length)) return [3 /*break*/, 8];
+                        if (!(i < packages.length)) return [3 /*break*/, 6];
                         p = packages[i];
-                        if (!(p.getName() == "homebrew")) return [3 /*break*/, 3];
-                        return [4 /*yield*/, execFile("curl", ["-fsSL", "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"])];
+                        console.log("Download Package: " + p.getName());
+                        if (!(p.getName() == "adb")) return [3 /*break*/, 3];
+                        return [4 /*yield*/, execFile("brew", ["cask", "install", "android-platform-tools"])];
                     case 2:
                         _a.sent();
                         _a.label = 3;
                     case 3:
-                        if (!(p.getName() == "adb")) return [3 /*break*/, 5];
-                        return [4 /*yield*/, execFile("brew", ["cask", "install", "android-platform-tools"])];
+                        if (!(p.getName() == "scrcpy")) return [3 /*break*/, 5];
+                        return [4 /*yield*/, execFile("brew", ["install", "scrcpy"])];
                     case 4:
                         _a.sent();
                         _a.label = 5;
                     case 5:
-                        if (!(p.getName() == "scrcpy")) return [3 /*break*/, 7];
-                        return [4 /*yield*/, execFile("brew", ["install", "scrcpy"])];
-                    case 6:
-                        _a.sent();
-                        _a.label = 7;
-                    case 7:
                         i++;
                         return [3 /*break*/, 1];
-                    case 8:
+                    case 6:
                         callback();
-                        return [3 /*break*/, 10];
-                    case 9:
+                        return [3 /*break*/, 8];
+                    case 7:
                         url = "https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip";
                         path = __dirname + "\\scrcpy.zip";
                         this.requestHttps(url, path, function () {
@@ -168,8 +178,8 @@ var OAL = /** @class */ (function () {
                             _this.unzipFile(srcpath, dstpath);
                             callback();
                         });
-                        _a.label = 10;
-                    case 10: return [2 /*return*/];
+                        _a.label = 8;
+                    case 8: return [2 /*return*/];
                 }
             });
         });
@@ -338,14 +348,13 @@ var OAL = /** @class */ (function () {
             var result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, execFile("brew", ["-v"])];
+                    case 0: return [4 /*yield*/, execFile("brew", ["-v"]).catch(function (error) {
+                            return new Package_1.default("homebrew", "https://brew.sh/");
+                        })];
                     case 1:
                         result = _a.sent();
-                        if (result.stderr) { // エラーが発生したととき
-                            return [2 /*return*/, new Package_1.default("homebrew", "https://brew.sh/")];
-                        }
-                        if (result.stdout.indexOf("command not found") >= 0) {
-                            return [2 /*return*/, new Package_1.default("homebrew", "https://brew.sh/")];
+                        if (result instanceof Package_1.default) {
+                            return [2 /*return*/, result];
                         }
                         else {
                             return [2 /*return*/, null];

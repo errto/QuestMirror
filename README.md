@@ -8,28 +8,56 @@ A GUI application with scrcpy for mirroing Oculus Quest.
 Oculus Quest can be mirrored using scrcpy, but it takes time for a child or family to easily mirror it.
 This app calls scrcpy from Electron for easy mirroring by kids and anyone.
 
-# Installation
+# Install
+
+## Install on Windows
 
 It is better to use the pre-built package of links for easier execution.
 Unzip the zip file and click **QuestMirror.exe** in the unzipped folder.
 
 Pre-build: https://github.com/r-asada-ab/QuestMirror/releases/download/v1.1.0/quest-mirror-win32-x64.zip
 
-## Build 
+## Install on Mac
 
-If you want to build it yourself, follow the steps below.
+### Prepare installation command
+
+The Mac version requires Homebrew, so install it first.
+
+Go to the Homebrew official site, and there is a download command, so copy it.
+
+https://brew.sh/
+
+You can use this as the installation command is pasted here as well.
 
 ```
-git clone git@github.com:r-asada-ab/QuestMirror.git
-cd questmirror
-npm install
-npm start
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ```
 
-When the app launches, the app first automatically downloads the scrcpy pre-built files from Github(See below).
+### Open terminal
 
-https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip
+After that, paste the above command in the terminal and press enter.
 
+Find Terminal from Application and start it. Terminal is in Utilites of Application.
+
+<img src="./readmeimg/homebrew_install_01.png"/>
+
+<img src="./readmeimg/homebrew_install_02.png"/>
+
+Paste the above command into the terminal.
+
+<img src="./readmeimg/homebrew_install_03.png"/>
+
+Click enter to start the installation. Press Enter again to continue the installation.
+
+<img src="./readmeimg/homebrew_install_04.png"/>
+
+You will be asked for a password, so enter it and wait for a while until it completes.
+
+It can take quite some time, so it's best to do something else.
+
+When the installation is completed and QuestMirror is started, scrcpy and adb will be installed automatically.
+
+See the instructions below for the rest of the operations.
 
 # Instructions
 
@@ -46,6 +74,22 @@ Once downloaded, connect Oculus Quest to your PC. At this time, keep Oculus Ques
 After connecting Oculus Quest, press the play button to start mirroring.
 
 When performing wireless mirroring, press the radio button labeled Wi-Fi and the app will attempt to connect to Quest. When the connection is complete, disconnect the cable and press the play button to start mirroring.
+
+## Build 
+
+If you want to build it yourself, follow the steps below.
+
+```
+git clone git@github.com:r-asada-ab/QuestMirror.git
+cd questmirror
+npm install
+npm start
+```
+
+When the app launches, the app first automatically downloads the scrcpy pre-built files from Github(See below).
+
+https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip
+
 
 # Configuration
 
