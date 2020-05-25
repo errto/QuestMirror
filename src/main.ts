@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, shell} from 'electron'
 import ExecController from './ExecController'
 import OAL from './OAL'
 import PackageDownloader from './PackageDownloader'
@@ -117,35 +117,59 @@ app.on('ready', async () => {
     let downloader = PackageDownloader.getInstance();
     let hasDownloaded = await downloader.getHasDownloaded(); 
     if (!hasDownloaded) { // 必要なパッケージがダウンロードされていないとき
-        // ダウンロードダイアログを表示する
         let requirePackages = downloader.getRequirePackages();
-        let detail = ""
-        for (let i = 0; i < requirePackages.length; i++) {
-            if (OAL.getInstance().isMac()) {
-                detail += requirePackages[i].toString() + "\n"
+        // homebrewがインストールされていないとき
+        if (requirePackages[0].getName() == "homebrew") {
+            let detail = 'Please install Homebrew before launching this app.'
+            detail +=  "\n" + "\n" 
+            detail += "Press OK button to open the Github page(https://github.com/r-asada-ab/QuestMirror)."
+            detail +=  "\n" + "\n" 
+            detail += "Check Install on Mac."
+            var options = {
+                title: 'Download',
+                type: 'info',
+                buttons: ['OK', 'Cancel'],
+                message: 'This app requires Homebrew',
+                detail: detail
+            };
+            let result = await dialog.showMessageBox(mainWindow, options);
+    
+            if (result.response == 0) { // アプリを閉じるとき
+                shell.openExternal("https://github.com/r-asada-ab/QuestMirror");
+                app.quit();
             } else {
-                detail += requirePackages[i].toString() + "\r\n"
+                app.quit();
+            }
+        } else {
+            let detail = ""
+            for (let i = 0; i < requirePackages.length; i++) {
+                if (OAL.getInstance().isMac()) {
+                    detail += requirePackages[i].toString() + "\n"
+                } else {
+                    detail += requirePackages[i].toString() + "\r\n"
+                }
+            }
+            detail += "\n" + "Press button to download it."
+
+            var options = {
+                title: 'Download',
+                type: 'info',
+                buttons: ['OK', 'Cancel'],
+                message: 'This app requires the following packages',
+                detail: detail
+            };
+            let result = await dialog.showMessageBox(mainWindow, options);
+
+            if (result.response == 1) { // アプリを閉じるとき
+                app.quit()
+            } else {
+                mainWindow?.webContents.send("download_start");
+                downloader.downloadPackages(() => {
+                    setTimeout(() => { 
+                        mainWindow?.webContents.send("download_end")
+                    }, 2500)
+                });
             }
         }
-        detail += "\n" + "Press button to download it."
-
-        var options = {
-            title: 'Download',
-            type: 'info',
-            buttons: ['OK'],
-            message: 'This app requires the following packages',
-            detail: detail
-        };
-        let result = dialog.showMessageBox(mainWindow, options);
-
-        // ダウンロードを開始する
-        result.then((res) => {
-            mainWindow?.webContents.send("download_start");
-            downloader.downloadPackages(() => {
-                setTimeout(() => { 
-                    mainWindow?.webContents.send("download_end")
-                }, 2500)
-            });
-        });
     }
 })

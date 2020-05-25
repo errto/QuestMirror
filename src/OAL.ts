@@ -7,8 +7,25 @@ import { promisify } from "util";
 
 import Package from "./Package";
 import StringUtil from "./StringUtil";
+import { ipcMain, BrowserWindow } from "electron";
 
 const execFile = promisify(child.execFile)
+
+function spawn(cmd: string, args: string[]) : Promise<void> {
+    return new Promise((resolve)=>{
+        let p = child.spawn(cmd,args);
+        p.on('exit', (code)=>{
+            resolve();
+        });
+        p.stdout.setEncoding('utf-8');
+        p.stdout.on('data', (data)=>{
+            console.log(data);
+        });
+        p.stderr.on('data', (data)=>{
+            console.log(data);
+        });
+    })
+}
 
 // OS抽象化レイヤー
 export default class OAL {
@@ -63,13 +80,9 @@ export default class OAL {
     // パッケージをダウンロードする
     public async downloadPackages(packages: Package[], callback: Function): Promise<void> {
         if (this.isMac()) { // Macのとき
-
             for (let i = 0; i < packages.length; i++) {
                 let p = packages[i];
-                if (p.getName() == "homebrew") {
-                    await execFile("curl", ["-fsSL", "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"])
-                }
-
+                console.log("Download Package: " + p.getName())
                 if (p.getName() == "adb") {
                     await execFile("brew", ["cask", "install", "android-platform-tools"]);
                 }
@@ -209,13 +222,12 @@ export default class OAL {
 
     // homebrewが起動するか
     private async checkHomebrew(): Promise<Package | null> {
-        let result = await execFile("brew", ["-v"]);
-        if (result.stderr) { // エラーが発生したととき
+        let result = await execFile("brew", ["-v"]).catch((error) => {
             return new Package("homebrew", "https://brew.sh/");
-        }
+        })
 
-        if (result.stdout.indexOf("command not found") >= 0) {
-            return new Package("homebrew", "https://brew.sh/");
+        if (result instanceof Package) {
+            return result
         } else {
             return null;
         }
