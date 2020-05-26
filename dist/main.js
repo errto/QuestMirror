@@ -40,158 +40,207 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
-var AssetsDownloader_1 = __importDefault(require("./AssetsDownloader"));
 var ExecController_1 = __importDefault(require("./ExecController"));
+var OAL_1 = __importDefault(require("./OAL"));
+var PackageDownloader_1 = __importDefault(require("./PackageDownloader"));
+var fixPath = require('fix-path');
+fixPath();
 // メインウィンドウ
 var mainWindow = null;
 // アプリが起動するとき
-electron_1.app.on('ready', function () {
-    // メインウィンドウを生成
-    mainWindow = new electron_1.BrowserWindow({
-        webPreferences: {
-            nodeIntegration: true,
-        },
-        width: 300,
-        height: 300,
-    });
-    mainWindow.removeMenu();
-    // ウィンドウが閉じたとき
-    mainWindow.on('closed', function () {
-        ExecController_1.default.getInstance().disconnect();
-        mainWindow = null;
-    });
-    // htmlをロード
-    mainWindow.loadURL('file://' + __dirname + '/index.html');
-    // scrcpyをダウンロードする
-    var downloader = AssetsDownloader_1.default.getInstance();
-    if (!downloader.getHasDownloaded()) { // scrcpyがダウンロードされていないとき
-        var options = {
-            title: 'Download',
-            type: 'info',
-            buttons: ['OK'],
-            message: 'scrcpy is required',
-            detail: "This App need scrcpy(https://github.com/Genymobile/scrcpy). Press button to download it."
-        };
-        var result = electron_1.dialog.showMessageBox(mainWindow, options);
-        result.then(function (res) {
-            var mrv = res;
-            mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_start");
-            downloader.downloadAssets(function () { return __awaiter(void 0, void 0, void 0, function () {
-                var dstpath, srcpath;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            dstpath = __dirname + "\\scrcpy";
-                            srcpath = __dirname + "\\scrcpy.zip";
-                            return [4 /*yield*/, downloader.unzipFile(srcpath, dstpath)];
-                        case 1:
-                            _a.sent();
-                            setTimeout(function () {
-                                mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
-                            }, 2500);
-                            return [2 /*return*/];
+electron_1.app.on('ready', function () { return __awaiter(void 0, void 0, void 0, function () {
+    var downloader, hasDownloaded, requirePackages, detail, options, result, detail, i, options, result;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                // メインウィンドウを生成
+                mainWindow = new electron_1.BrowserWindow({
+                    webPreferences: {
+                        nodeIntegration: true,
+                    },
+                    width: 300,
+                    height: 300,
+                });
+                mainWindow.removeMenu();
+                // ウィンドウが閉じたとき
+                mainWindow.on('closed', function () {
+                    ExecController_1.default.getInstance().disconnect();
+                    mainWindow = null;
+                });
+                // htmlをロード
+                mainWindow.loadURL('file://' + __dirname + '/index.html');
+                // デバイスが接続されてないとき
+                electron_1.ipcMain.on("device_disconected", function () { return __awaiter(void 0, void 0, void 0, function () {
+                    var options, result, execController;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!mainWindow) return [3 /*break*/, 2];
+                                options = {
+                                    title: 'No device is connected',
+                                    type: 'info',
+                                    buttons: ['OK', 'Cancel'],
+                                    message: 'No device is connected.',
+                                    detail: "Please connect your Oculus Quest device via USB cable."
+                                };
+                                return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
+                            case 1:
+                                result = _a.sent();
+                                if (result.response == 1) { // アプリを閉じるとき
+                                    electron_1.app.quit();
+                                }
+                                else {
+                                    execController = ExecController_1.default.getInstance();
+                                    execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+                                }
+                                _a.label = 2;
+                            case 2: return [2 /*return*/];
+                        }
+                    });
+                }); });
+                // デバイスがワイアレス接続されたとき
+                electron_1.ipcMain.on("device_wireless_connected", function () {
+                    if (mainWindow) {
+                        var options = {
+                            title: 'Device is connected',
+                            type: 'info',
+                            buttons: ['OK'],
+                            message: 'Device is connected wirelessly!',
+                            detail: "Please unplug USB cable."
+                        };
+                        electron_1.dialog.showMessageBox(mainWindow, options);
                     }
                 });
-            }); });
-        });
-    }
-    // デバイスが接続されてないとき
-    electron_1.ipcMain.on("device_disconected", function () { return __awaiter(void 0, void 0, void 0, function () {
-        var options, result, execController;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!mainWindow) return [3 /*break*/, 2];
-                    options = {
-                        title: 'No device is connected',
-                        type: 'info',
-                        buttons: ['OK', 'Cancel'],
-                        message: 'No device is connected.',
-                        detail: "Please connect your Oculus Quest device via USB cable."
-                    };
-                    return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
-                case 1:
-                    result = _a.sent();
-                    if (result.response == 1) { // アプリを閉じるとき
-                        electron_1.app.quit();
+                // UIControllerの設定が完了したとき
+                electron_1.ipcMain.on("UIController_is_ready", function () { return __awaiter(void 0, void 0, void 0, function () {
+                    var hasDownloaded, execController;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, downloader.getHasDownloaded()];
+                            case 1:
+                                hasDownloaded = _a.sent();
+                                if (hasDownloaded) {
+                                    execController = ExecController_1.default.getInstance();
+                                    execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {
+                    var result, path;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!mainWindow) return [3 /*break*/, 2];
+                                return [4 /*yield*/, electron_1.dialog.showOpenDialog(mainWindow, {
+                                        properties: ['openDirectory', "createDirectory"]
+                                    })];
+                            case 1:
+                                result = _a.sent();
+                                path = result.filePaths[0];
+                                mainWindow.webContents.send("directory_selected", path);
+                                _a.label = 2;
+                            case 2: return [2 /*return*/];
+                        }
+                    });
+                }); });
+                // ディレクトリ選択ボタンが押されたとき
+                electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {
+                    var result, path;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!mainWindow) return [3 /*break*/, 2];
+                                return [4 /*yield*/, electron_1.dialog.showOpenDialog(mainWindow, {
+                                        properties: ['openDirectory', "createDirectory"]
+                                    })];
+                            case 1:
+                                result = _a.sent();
+                                path = result.filePaths[0];
+                                mainWindow.webContents.send("directory_selected", path);
+                                _a.label = 2;
+                            case 2: return [2 /*return*/];
+                        }
+                    });
+                }); });
+                // キャプチャディレクトリが選択されていないとき
+                electron_1.ipcMain.on("no_capture_directory_is_selected", function () {
+                    if (mainWindow) {
+                        var options = {
+                            title: 'No capture directory is selected',
+                            type: 'info',
+                            buttons: ['OK'],
+                            message: 'No Capture Directory is Selected.',
+                            detail: "Please select a Directory to Save Capture Video."
+                        };
+                        electron_1.dialog.showMessageBox(mainWindow, options);
+                    }
+                });
+                downloader = PackageDownloader_1.default.getInstance();
+                return [4 /*yield*/, downloader.getHasDownloaded()];
+            case 1:
+                hasDownloaded = _a.sent();
+                if (!!hasDownloaded) return [3 /*break*/, 5];
+                requirePackages = downloader.getRequirePackages();
+                if (!(requirePackages[0].getName() == "homebrew")) return [3 /*break*/, 3];
+                detail = 'Please install Homebrew before launching this app.';
+                detail += "\n" + "\n";
+                detail += "Press OK button to open the Github page(https://github.com/r-asada-ab/QuestMirror).";
+                detail += "\n" + "\n";
+                detail += "Check Install on Mac.";
+                options = {
+                    title: 'Download',
+                    type: 'info',
+                    buttons: ['OK', 'Cancel'],
+                    message: 'This app requires Homebrew',
+                    detail: detail
+                };
+                return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
+            case 2:
+                result = _a.sent();
+                if (result.response == 0) { // アプリを閉じるとき
+                    electron_1.shell.openExternal("https://github.com/r-asada-ab/QuestMirror");
+                    electron_1.app.quit();
+                }
+                else {
+                    electron_1.app.quit();
+                }
+                return [3 /*break*/, 5];
+            case 3:
+                detail = "";
+                for (i = 0; i < requirePackages.length; i++) {
+                    if (OAL_1.default.getInstance().isMac()) {
+                        detail += requirePackages[i].toString() + "\n";
                     }
                     else {
-                        execController = ExecController_1.default.getInstance();
-                        execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
+                        detail += requirePackages[i].toString() + "\r\n";
                     }
-                    _a.label = 2;
-                case 2: return [2 /*return*/];
-            }
-        });
-    }); });
-    // デバイスがワイアレス接続されたとき
-    electron_1.ipcMain.on("device_wireless_connected", function () {
-        if (mainWindow) {
-            var options = {
-                title: 'Device is connected',
-                type: 'info',
-                buttons: ['OK'],
-                message: 'Device is connected wirelessly!',
-                detail: "Please unplug USB cable."
-            };
-            electron_1.dialog.showMessageBox(mainWindow, options);
+                }
+                detail += "\n" + "Press button to download it.";
+                options = {
+                    title: 'Download',
+                    type: 'info',
+                    buttons: ['OK', 'Cancel'],
+                    message: 'This app requires the following packages',
+                    detail: detail
+                };
+                return [4 /*yield*/, electron_1.dialog.showMessageBox(mainWindow, options)];
+            case 4:
+                result = _a.sent();
+                if (result.response == 1) { // アプリを閉じるとき
+                    electron_1.app.quit();
+                }
+                else {
+                    mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_start");
+                    downloader.downloadPackages(function () {
+                        setTimeout(function () {
+                            mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("download_end");
+                        }, 2500);
+                    });
+                }
+                _a.label = 5;
+            case 5: return [2 /*return*/];
         }
     });
-    // UIControllerの設定が完了したとき
-    electron_1.ipcMain.on("UIController_is_ready", function () {
-        if (downloader.getHasDownloaded()) {
-            var execController = ExecController_1.default.getInstance();
-            execController.isDeviceConnected(function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_conected"); }, function () { mainWindow === null || mainWindow === void 0 ? void 0 : mainWindow.webContents.send("device_disconected"); });
-        }
-    });
-    electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {
-        var result, path;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!mainWindow) return [3 /*break*/, 2];
-                    return [4 /*yield*/, electron_1.dialog.showOpenDialog(mainWindow, {
-                            properties: ['openDirectory', "createDirectory"]
-                        })];
-                case 1:
-                    result = _a.sent();
-                    path = result.filePaths[0];
-                    mainWindow.webContents.send("directory_selected", path);
-                    _a.label = 2;
-                case 2: return [2 /*return*/];
-            }
-        });
-    }); });
-    // ディレクトリ選択ボタンが押されたとき
-    electron_1.ipcMain.on("directory_select_button_clicked", function (event, args) { return __awaiter(void 0, void 0, void 0, function () {
-        var result, path;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!mainWindow) return [3 /*break*/, 2];
-                    return [4 /*yield*/, electron_1.dialog.showOpenDialog(mainWindow, {
-                            properties: ['openDirectory', "createDirectory"]
-                        })];
-                case 1:
-                    result = _a.sent();
-                    path = result.filePaths[0];
-                    mainWindow.webContents.send("directory_selected", path);
-                    _a.label = 2;
-                case 2: return [2 /*return*/];
-            }
-        });
-    }); });
-    // キャプチャディレクトリが選択されていないとき
-    electron_1.ipcMain.on("no_capture_directory_is_selected", function () {
-        if (mainWindow) {
-            var options = {
-                title: 'No capture directory is selected',
-                type: 'info',
-                buttons: ['OK'],
-                message: 'No Capture Directory is Selected.',
-                detail: "Please select a Directory to Save Capture Video."
-            };
-            electron_1.dialog.showMessageBox(mainWindow, options);
-        }
-    });
-});
+}); });

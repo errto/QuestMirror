@@ -391,7 +391,6 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
 
     // ディレクトリが選択されているか
     private isCaptureDirectroySelected(): boolean {
-        console.log(this.directorySelectButton.innerText);
         return this.directorySelectButton.innerText　!= "No Directory Selected"
     }
 

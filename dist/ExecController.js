@@ -1,27 +1,53 @@
 "use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var child = __importStar(require("child_process"));
+var OAL_1 = __importDefault(require("./OAL"));
 var ScrcpySettings_1 = __importDefault(require("./ScrcpySettings"));
-var StringUtil_1 = __importDefault(require("./StringUtil"));
 // 外部アプリを管理するContorllerクラス
 var ExecController = /** @class */ (function () {
     // コンストラクタ
     function ExecController() {
         this.settings = new ScrcpySettings_1.default();
-        this.childProcess = null;
         this.isMirroring = false;
         this.listener = null;
-        this.ip = "";
     }
     // イベントリスナーを設定する
     ExecController.prototype.setEventListener = function (listener) {
@@ -54,10 +80,7 @@ var ExecController = /** @class */ (function () {
     };
     // ミラーリングを停止する
     ExecController.prototype.stopMirroring = function () {
-        if (this.childProcess) { // 子プロセスがあるとき
-            var args = ["/im", "scrcpy.exe"];
-            child.spawn("taskkill", args);
-        }
+        OAL_1.default.getInstance().exitSrccpy();
     };
     // 最大サイズを設定する
     ExecController.prototype.setMaxSize = function (maxSize) {
@@ -104,80 +127,54 @@ var ExecController = /** @class */ (function () {
         this.settings.isWireless = b;
     };
     // デバイスが接続されているか
-    ExecController.prototype.isDeviceConnected = function (successCallback, failerCallback) {
-        var _this = this;
-        var path = __dirname;
-        var cmd = '/scrcpy/adb.exe';
-        var cp = child.spawn(path + cmd, ["devices", "-l"]);
-        var outStr = "";
-        cp.stdout.setEncoding('utf-8');
-        cp.stdout.on('data', function (data) {
-            outStr = String(data);
-        });
-        cp.on("close", function () {
-            var strLines = StringUtil_1.default.getLines(outStr);
-            for (var i = 1; i < strLines.length; i++) {
-                if (strLines[i].indexOf("Quest") > 0 && strLines[i].indexOf("192.168") < 0) {
-                    var st = 0;
-                    var ed = strLines[i].indexOf(" ");
-                    _this.settings.deviceSerial = strLines[i].slice(st, ed);
-                    console.log(_this.settings.deviceSerial);
-                    successCallback();
-                    return;
+    ExecController.prototype.isDeviceConnected = function (successCallback, failedCallback) {
+        return __awaiter(this, void 0, void 0, function () {
+            var result;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, OAL_1.default.getInstance().isDeviceConnected()];
+                    case 1:
+                        result = _a.sent();
+                        if (result) {
+                            this.settings.deviceSerial = result;
+                            successCallback();
+                        }
+                        else {
+                            failedCallback();
+                        }
+                        return [2 /*return*/];
                 }
-            }
-            var args = ["/im", "adb.exe"];
-            child.spawn("taskkill", args);
-            failerCallback();
+            });
         });
     };
     // ipアドレスを取得する
-    ExecController.prototype.getIP = function (successCallback, failerCallback) {
-        var _this = this;
-        var path = __dirname;
-        var cmd = '/scrcpy/adb.exe';
-        var cp = child.spawn(path + cmd, ["-s", this.settings.deviceSerial, "shell",
-            "dumpsys", "wifi"]);
-        var outStr = "";
-        cp.stdout.setEncoding('utf-8');
-        cp.stdout.on('data', function (data) {
-            outStr += String(data);
-        });
-        cp.on("close", function () {
-            var strLines = StringUtil_1.default.getLines(outStr);
-            for (var i = 0; i < strLines.length; i++) {
-                if (strLines[i].indexOf("ip_address") >= 0) {
-                    _this.ip = strLines[i].slice(11);
-                    _this.settings.deviceIp = _this.ip;
-                    successCallback();
-                    return;
+    ExecController.prototype.getIP = function (successCallback, failedCallback) {
+        return __awaiter(this, void 0, void 0, function () {
+            var ip;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, OAL_1.default.getInstance().getIP(this.settings.deviceSerial)];
+                    case 1:
+                        ip = _a.sent();
+                        if (ip) {
+                            this.settings.deviceIp = ip;
+                            successCallback();
+                        }
+                        else {
+                            failedCallback();
+                        }
+                        return [2 /*return*/];
                 }
-            }
-            failerCallback(); // 見つからなかったとき
+            });
         });
     };
     // TCP/IPで接続する
-    ExecController.prototype.connectTCPIP = function (successCallback, failerCallback) {
-        var _this = this;
-        var path = __dirname;
-        var cmd = '/scrcpy/adb.exe';
-        var cp0 = child.spawn(path + cmd, ["-s", this.settings.deviceSerial, "tcpip", "5555"]);
-        cp0.stdout.setEncoding('utf-8');
-        cp0.on("close", function () {
-            var cp1 = child.spawn(path + cmd, ["connect", _this.ip + ":5555"]);
-            cp1.on("close", function () {
-                successCallback();
-            });
-            cp1.on("error", function () {
-                failerCallback();
-            });
-        });
+    ExecController.prototype.connectTCPIP = function (successCallback, failedCallback) {
+        OAL_1.default.getInstance().connectTCPIP(this.settings.deviceSerial, this.settings.deviceIp, successCallback, failedCallback);
     };
     // デバイスとの接続を切る
     ExecController.prototype.disconnect = function () {
-        var path = __dirname;
-        var cmd = '/scrcpy/adb.exe';
-        child.spawn(path + cmd, ["disconnect"]);
+        OAL_1.default.getInstance().discconct();
     };
     // ワイアレス接続する 
     ExecController.prototype.connectWireless = function (successCallback, failerCallback) {
@@ -200,17 +197,9 @@ var ExecController = /** @class */ (function () {
     };
     // scrcpyを実行する
     ExecController.prototype.executeScrcpy = function (args) {
-        this.startScrcpy(args);
-    };
-    // scrcpyを起動する
-    ExecController.prototype.startScrcpy = function (args) {
         var _this = this;
-        var path = __dirname;
-        var cmd = '/scrcpy/scrcpy.exe';
-        this.childProcess = child.spawn(path + cmd, args);
         this.isMirroring = true;
-        // closeしたとき
-        this.childProcess.on('close', function (code) {
+        OAL_1.default.getInstance().launchSrccpy(args, function () {
             var _a;
             if (_this.isMirroring) { //  scrcpyを直接閉じたとき
                 _this.isMirroring = false;
