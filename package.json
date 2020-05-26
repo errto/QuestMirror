@@ -1,6 +1,6 @@
 {
   "name": "QuestMirror",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A GUI application with scrcpy for mirroing Oculus Quest.",
   "scripts": {
     "build": "tsc",
