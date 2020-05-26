@@ -113,13 +113,7 @@ export default class OAL {
             let cmd = __dirname + '/scrcpy/adb.exe';
             let result = await execFile(cmd, ["devices","-l"]);
             let serail = this.getDeviceSerial(result.stdout);
-            if (!serail) {
-                let args = ["/im", "adb.exe"]
-                await execFile("taskkill", args);
-                return serail
-            } else {
-                return serail
-            }
+            return serail
         }
     }
 
