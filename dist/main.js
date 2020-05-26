@@ -43,6 +43,8 @@ var electron_1 = require("electron");
 var ExecController_1 = __importDefault(require("./ExecController"));
 var OAL_1 = __importDefault(require("./OAL"));
 var PackageDownloader_1 = __importDefault(require("./PackageDownloader"));
+var fixPath = require('fix-path');
+fixPath();
 // メインウィンドウ
 var mainWindow = null;
 // アプリが起動するとき

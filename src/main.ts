@@ -2,6 +2,9 @@ import {app, BrowserWindow, dialog, ipcMain, shell} from 'electron'
 import ExecController from './ExecController'
 import OAL from './OAL'
 import PackageDownloader from './PackageDownloader'
+const fixPath = require('fix-path');
+
+fixPath();
 
 // メインウィンドウ
 let mainWindow: Electron.BrowserWindow | null = null
