@@ -7,6 +7,7 @@ var electron_1 = require("electron");
 var ExecController_1 = __importDefault(require("./ExecController"));
 var Spiner_1 = __importDefault(require("./Spiner"));
 var Timer_1 = __importDefault(require("./Timer"));
+var ScrcpySettings_1 = require("./ScrcpySettings");
 // UIを管理するControllerクラス
 var UIContoller = /** @class */ (function () {
     // コンストラクタ
@@ -21,6 +22,7 @@ var UIContoller = /** @class */ (function () {
         this.directorySelectButton = document.getElementById("directory_select_button");
         this.fullscreenCheckbox = document.getElementById("fullscreen_checkbox");
         this.cropCheckbox = document.getElementById("crop_checkbox");
+        this.cropCenterCheckbox = document.getElementById("crop_center_checkbox");
         this.cropRightCheckbox = document.getElementById("crop_right_checkbox");
         this.cropLeftCheckbox = document.getElementById("crop_left_checkbox");
         this.mirroringTimeLabel = document.getElementById("mirroring_time");
@@ -127,28 +129,41 @@ var UIContoller = /** @class */ (function () {
             var instance = ExecController_1.default.getInstance();
             instance.setIsCrop(val);
             if (!val) { // チェックが外れたとき
+                _this.cropCenterCheckbox.disabled = true;
                 _this.cropLeftCheckbox.disabled = true;
                 _this.cropRightCheckbox.disabled = true;
             }
             else { // チェックが入ったとき
+                _this.cropCenterCheckbox.disabled = false;
                 _this.cropLeftCheckbox.disabled = false;
                 _this.cropRightCheckbox.disabled = false;
+            }
+        });
+        this.cropCenterCheckbox.addEventListener("change", function () {
+            var val = _this.cropCenterCheckbox.checked;
+            var instance = ExecController_1.default.getInstance();
+            instance.setCropSide(ScrcpySettings_1.CropSide.Center);
+            if (val) { // 真ん中をcropするとき
+                _this.cropLeftCheckbox.checked = false;
+                _this.cropRightCheckbox.checked = false;
             }
         });
         this.cropLeftCheckbox.addEventListener("change", function () {
             var val = _this.cropLeftCheckbox.checked;
             var instance = ExecController_1.default.getInstance();
-            instance.setIsLeftCrop(val);
+            instance.setCropSide(ScrcpySettings_1.CropSide.Left);
             if (val) { // 左をcropするとき
+                _this.cropCenterCheckbox.checked = false;
                 _this.cropRightCheckbox.checked = false;
             }
         });
         this.cropRightCheckbox.addEventListener("change", function () {
             var val = _this.cropRightCheckbox.checked;
             var instance = ExecController_1.default.getInstance();
-            instance.setIsLeftCrop(!val);
-            if (val) {
+            instance.setCropSide(ScrcpySettings_1.CropSide.Right);
+            if (val) { // 右をcropするとき
                 _this.cropLeftCheckbox.checked = false;
+                _this.cropCenterCheckbox.checked = false;
             }
         });
         this.wifiCheckBox.addEventListener("change", function () {

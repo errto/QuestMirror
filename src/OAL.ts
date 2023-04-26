@@ -1,6 +1,7 @@
 import * as child from "child_process"
 import extract from "extract-zip";
-import fs from "fs";
+import fs, { Stats } from "fs";
+import path from "path";
 import https from "https";
 import { IncomingMessage } from "http";
 import { promisify } from "util";
@@ -10,6 +11,7 @@ import StringUtil from "./StringUtil";
 import { ipcMain, BrowserWindow } from "electron";
 
 const execFile = promisify(child.execFile)
+const scrcpyDir = 'scrcpy/scrcpy-win64-v2.0'
 
 function spawn(cmd: string, args: string[]) : Promise<void> {
     return new Promise((resolve)=>{
@@ -93,11 +95,11 @@ export default class OAL {
             }
             callback()
         } else { // Windowsのとき
-            let url = "https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip"
-            const path: string = __dirname + "\\scrcpy.zip";
-            this.requestHttps(url, path, () => {
-                const dstpath: string = __dirname +  "\\scrcpy";
-                const srcpath: string = __dirname + "\\scrcpy.zip";
+            let url = "https://github.com/Genymobile/scrcpy/releases/download/v2.0/scrcpy-win64-v2.0.zip"
+            const scrPath: string =  path.join(__dirname, "scrcpy.zip");
+            this.requestHttps(url, scrPath, () => {
+                const dstpath: string = path.join(__dirname, "scrcpy");
+                const srcpath: string = path.join(__dirname, "scrcpy.zip");
                 this.unzipFile(srcpath, dstpath);
                 callback();
             })
@@ -110,7 +112,7 @@ export default class OAL {
             let result = await execFile("adb", ["devices","-l"]);
             return this.getDeviceSerial(result.stdout);
         } else { // Windowsのとき
-            let cmd = __dirname + '/scrcpy/adb.exe';
+            let cmd = path.join(__dirname, scrcpyDir , 'adb.exe');
             let result = await execFile(cmd, ["devices","-l"]);
             let serail = this.getDeviceSerial(result.stdout);
             return serail
@@ -123,9 +125,9 @@ export default class OAL {
         if (this.isMac()) {
             cmd = "scrcpy";
         } else {
-            cmd = __dirname +'/scrcpy/scrcpy.exe';
+            cmd = path.join(__dirname, scrcpyDir, 'scrcpy.exe');
         }
-        let cp = child.spawn(cmd, args);
+        let cp = child.spawn(cmd, args, { 'shell': true });
         cp.on('close', () => closeCallback());
     }
 
@@ -148,15 +150,20 @@ export default class OAL {
         if (this.isMac()) {
             cmd = "adb";
         } else {
-            cmd = __dirname +'/scrcpy/adb.exe';
+            cmd = path.join(__dirname, scrcpyDir, 'adb.exe');
         }
-        let result = await execFile(cmd, ["-s", deviceSerial, "shell", "dumpsys", "wifi"]);
+        let result = await execFile(cmd, ["-s", deviceSerial, "shell", "ip", "addr", "show", "wlan0"]);
 
         let strLines = StringUtil.getLines(result.stdout)
         for (let i = 0; i < strLines.length; i++) {
-            if (strLines[i].indexOf("ip_address") >= 0) {
-                let ip = strLines[i].slice(11);
-                return ip
+            // IPv4アドレスを取得
+            if (strLines[i].indexOf("inet ") >= 0) {
+                const regex = /inet (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/;
+                const match = strLines[i].match(regex);
+
+                if (match && match[1]) {
+                    return match[1];
+                }
             }
         }
         return null;
@@ -169,7 +176,7 @@ export default class OAL {
         if (this.isMac()) {
             cmd = "adb";
         } else {
-            cmd = __dirname +'/scrcpy/adb.exe';
+            cmd = path.join(__dirname, scrcpyDir, 'adb.exe');
         }
         await execFile(cmd, ["-s", deviceSerial, "tcpip","5555"]);
         let result = await execFile(cmd, ["connect", ip+ ":5555"]).catch(() => {
@@ -188,7 +195,7 @@ export default class OAL {
         if (this.isMac()) {
             cmd = "adb";
         } else {
-            cmd = __dirname +'/scrcpy/adb.exe';
+            cmd = path.join(__dirname, scrcpyDir, 'adb.exe');
         }
         execFile(cmd, ["disconnect"]);
     }
@@ -240,9 +247,9 @@ export default class OAL {
                 return null;
             }
         } else { // Windowsのとき
-            const path: string = __dirname + "\\scrcpy\\scrcpy.exe";
+            const scrPath: string = path.join(__dirname, scrcpyDir, "scrcpy.exe");
             try {
-                fs.statSync(path)
+                fs.statSync(scrPath)
             } catch (e) {
                 return new Package("scrcpy", "https://github.com/Genymobile/scrcpy");
             }

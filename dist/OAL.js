@@ -49,11 +49,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var child = __importStar(require("child_process"));
 var extract_zip_1 = __importDefault(require("extract-zip"));
 var fs_1 = __importDefault(require("fs"));
+var path_1 = __importDefault(require("path"));
 var https_1 = __importDefault(require("https"));
 var util_1 = require("util");
 var Package_1 = __importDefault(require("./Package"));
 var StringUtil_1 = __importDefault(require("./StringUtil"));
-var execFile = util_1.promisify(child.execFile);
+var execFile = (0, util_1.promisify)(child.execFile);
+var scrcpyDir = 'scrcpy/scrcpy-win64-v2.0';
 function spawn(cmd, args) {
     return new Promise(function (resolve) {
         var p = child.spawn(cmd, args);
@@ -128,7 +130,7 @@ var OAL = /** @class */ (function () {
     // パッケージをダウンロードする
     OAL.prototype.downloadPackages = function (packages, callback) {
         return __awaiter(this, void 0, void 0, function () {
-            var i, p, url, path;
+            var i, p, url, scrPath;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -158,11 +160,11 @@ var OAL = /** @class */ (function () {
                         callback();
                         return [3 /*break*/, 8];
                     case 7:
-                        url = "https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip";
-                        path = __dirname + "\\scrcpy.zip";
-                        this.requestHttps(url, path, function () {
-                            var dstpath = __dirname + "\\scrcpy";
-                            var srcpath = __dirname + "\\scrcpy.zip";
+                        url = "https://github.com/Genymobile/scrcpy/releases/download/v2.0/scrcpy-win64-v2.0.zip";
+                        scrPath = path_1.default.join(__dirname, "scrcpy.zip");
+                        this.requestHttps(url, scrPath, function () {
+                            var dstpath = path_1.default.join(__dirname, "scrcpy");
+                            var srcpath = path_1.default.join(__dirname, "scrcpy.zip");
                             _this.unzipFile(srcpath, dstpath);
                             callback();
                         });
@@ -185,7 +187,7 @@ var OAL = /** @class */ (function () {
                         result = _a.sent();
                         return [2 /*return*/, this.getDeviceSerial(result.stdout)];
                     case 2:
-                        cmd = __dirname + '/scrcpy/adb.exe';
+                        cmd = path_1.default.join(__dirname, scrcpyDir, 'adb.exe');
                         return [4 /*yield*/, execFile(cmd, ["devices", "-l"])];
                     case 3:
                         result = _a.sent();
@@ -202,9 +204,9 @@ var OAL = /** @class */ (function () {
             cmd = "scrcpy";
         }
         else {
-            cmd = __dirname + '/scrcpy/scrcpy.exe';
+            cmd = path_1.default.join(__dirname, scrcpyDir, 'scrcpy.exe');
         }
-        var cp = child.spawn(cmd, args);
+        var cp = child.spawn(cmd, args, { 'shell': true });
         cp.on('close', function () { return closeCallback(); });
     };
     // scrcpyを終了する
@@ -234,7 +236,7 @@ var OAL = /** @class */ (function () {
     // デバイスのIPを取得する
     OAL.prototype.getIP = function (deviceSerial) {
         return __awaiter(this, void 0, void 0, function () {
-            var cmd, result, strLines, i, ip;
+            var cmd, result, strLines, i, regex, match;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -243,16 +245,20 @@ var OAL = /** @class */ (function () {
                             cmd = "adb";
                         }
                         else {
-                            cmd = __dirname + '/scrcpy/adb.exe';
+                            cmd = path_1.default.join(__dirname, scrcpyDir, 'adb.exe');
                         }
-                        return [4 /*yield*/, execFile(cmd, ["-s", deviceSerial, "shell", "dumpsys", "wifi"])];
+                        return [4 /*yield*/, execFile(cmd, ["-s", deviceSerial, "shell", "ip", "addr", "show", "wlan0"])];
                     case 1:
                         result = _a.sent();
                         strLines = StringUtil_1.default.getLines(result.stdout);
                         for (i = 0; i < strLines.length; i++) {
-                            if (strLines[i].indexOf("ip_address") >= 0) {
-                                ip = strLines[i].slice(11);
-                                return [2 /*return*/, ip];
+                            // IPv4アドレスを取得
+                            if (strLines[i].indexOf("inet ") >= 0) {
+                                regex = /inet (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/;
+                                match = strLines[i].match(regex);
+                                if (match && match[1]) {
+                                    return [2 /*return*/, match[1]];
+                                }
                             }
                         }
                         return [2 /*return*/, null];
@@ -272,7 +278,7 @@ var OAL = /** @class */ (function () {
                             cmd = "adb";
                         }
                         else {
-                            cmd = __dirname + '/scrcpy/adb.exe';
+                            cmd = path_1.default.join(__dirname, scrcpyDir, 'adb.exe');
                         }
                         return [4 /*yield*/, execFile(cmd, ["-s", deviceSerial, "tcpip", "5555"])];
                     case 1:
@@ -298,7 +304,7 @@ var OAL = /** @class */ (function () {
             cmd = "adb";
         }
         else {
-            cmd = __dirname + '/scrcpy/adb.exe';
+            cmd = path_1.default.join(__dirname, scrcpyDir, 'adb.exe');
         }
         execFile(cmd, ["disconnect"]);
     };
@@ -349,7 +355,7 @@ var OAL = /** @class */ (function () {
     // scrcpyが起動するか
     OAL.prototype.checkScrcpy = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var result, path;
+            var result, scrPath;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -367,9 +373,9 @@ var OAL = /** @class */ (function () {
                         }
                         return [3 /*break*/, 3];
                     case 2:
-                        path = __dirname + "\\scrcpy\\scrcpy.exe";
+                        scrPath = path_1.default.join(__dirname, scrcpyDir, "scrcpy.exe");
                         try {
-                            fs_1.default.statSync(path);
+                            fs_1.default.statSync(scrPath);
                         }
                         catch (e) {
                             return [2 /*return*/, new Package_1.default("scrcpy", "https://github.com/Genymobile/scrcpy")];
@@ -410,7 +416,7 @@ var OAL = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, extract_zip_1.default(srcPath, { dir: dstPath })];
+                        return [4 /*yield*/, (0, extract_zip_1.default)(srcPath, { dir: dstPath })];
                     case 1:
                         _a.sent();
                         return [3 /*break*/, 3];
