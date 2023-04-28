@@ -88,7 +88,7 @@ npm start
 
 When the app launches, the app first automatically downloads the scrcpy pre-built files from Github(See below).
 
-https://github.com/Genymobile/scrcpy/releases/download/v1.13/scrcpy-win64-v1.13.zip
+https://github.com/Genymobile/scrcpy/releases/download/v2.0/scrcpy-win64-v2.0.zip
 
 
 # Configuration

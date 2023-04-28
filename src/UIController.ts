@@ -4,6 +4,7 @@ import ExecControllerListener from './ExecControllerListener';
 import Spinner from './Spiner';
 import Timer from './Timer';
 import TimerEventListener from './TimerEventListener';
+import { CropSide } from './ScrcpySettings';
 
 // UIを管理するControllerクラス
 export default class UIContoller implements ExecControllerListener, TimerEventListener {
@@ -28,6 +29,8 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
     private fullscreenCheckbox: HTMLInputElement;
     // crop選択チェックボックス
     private cropCheckbox: HTMLInputElement;
+    // cropセンター選択チェックボックス
+    private cropCenterCheckbox: HTMLInputElement;
     // crop右選択チェックボックス
     private cropRightCheckbox: HTMLInputElement;
     // crop左選択チェックボックス
@@ -59,6 +62,7 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
         this.directorySelectButton = <HTMLButtonElement>document.getElementById("directory_select_button");
         this.fullscreenCheckbox = <HTMLInputElement>document.getElementById("fullscreen_checkbox");
         this.cropCheckbox = <HTMLInputElement>document.getElementById("crop_checkbox");
+        this.cropCenterCheckbox = <HTMLInputElement>document.getElementById("crop_center_checkbox") 
         this.cropRightCheckbox = <HTMLInputElement>document.getElementById("crop_right_checkbox");
         this.cropLeftCheckbox = <HTMLInputElement>document.getElementById("crop_left_checkbox");
         this.mirroringTimeLabel = <HTMLElement>document.getElementById("mirroring_time");
@@ -174,19 +178,32 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
             let instance = ExecController.getInstance();
             instance.setIsCrop(val)
             if (!val) { // チェックが外れたとき
+                this.cropCenterCheckbox.disabled = true;
                 this.cropLeftCheckbox.disabled = true;
                 this.cropRightCheckbox.disabled = true;
             } else { // チェックが入ったとき
+                this.cropCenterCheckbox.disabled = false;
                 this.cropLeftCheckbox.disabled = false;
                 this.cropRightCheckbox.disabled = false;                
+            }
+        })
+
+        this.cropCenterCheckbox.addEventListener("change", () => {
+            let val = this.cropCenterCheckbox.checked
+            let instance = ExecController.getInstance();
+            instance.setCropSide(CropSide.Center)
+            if (val){ // 真ん中をcropするとき
+                this.cropLeftCheckbox.checked = false;
+                this.cropRightCheckbox.checked = false;
             }
         })
 
         this.cropLeftCheckbox.addEventListener("change", () => {
             let val = this.cropLeftCheckbox.checked
             let instance = ExecController.getInstance();
-            instance.setIsLeftCrop(val)
+            instance.setCropSide(CropSide.Left)
             if (val) { // 左をcropするとき
+                this.cropCenterCheckbox.checked = false;
                 this.cropRightCheckbox.checked = false;
             }
         })
@@ -194,9 +211,10 @@ export default class UIContoller implements ExecControllerListener, TimerEventLi
         this.cropRightCheckbox.addEventListener("change", () => {
             let val = this.cropRightCheckbox.checked
             let instance = ExecController.getInstance();
-            instance.setIsLeftCrop(!val)
-            if (val) {
+            instance.setCropSide(CropSide.Right)
+            if (val) { // 右をcropするとき
                 this.cropLeftCheckbox.checked = false;
+                this.cropCenterCheckbox.checked = false;
             }
         })
 

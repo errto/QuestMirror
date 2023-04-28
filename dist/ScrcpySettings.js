@@ -1,5 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.CropSide = void 0;
+// Cropする位置のEnum・・・TypeScriptの列挙型は問題があるためオブジェクトリテラルで代替
+exports.CropSide = {
+    Left: 0,
+    Center: 1,
+    Right: 2,
+};
 // scrcpyの引数に渡す設定情報のクラス
 var ScrcpySettings = /** @class */ (function () {
     function ScrcpySettings() {
@@ -9,8 +16,8 @@ var ScrcpySettings = /** @class */ (function () {
         this.fps = 60;
         // Crop
         this.isCrop = true;
-        // 左をcropするか
-        this.isLeftCrop = true;
+        // cropする位置
+        this.cropSide = exports.CropSide.Center;
         // 録画するか
         this.needCapture = false;
         // 保存先
@@ -48,13 +55,24 @@ var ScrcpySettings = /** @class */ (function () {
             args.push(this.fps.toString());
         }
         if (this.isCrop) {
-            if (this.isLeftCrop) { // 左をcropするとき
-                args.push("-c");
-                args.push('1200:1140:1520:170');
-            }
-            else { // 右をcropするとき
-                args.push("-c");
-                args.push('1200:1140:155:170');
+            switch (this.cropSide) {
+                case exports.CropSide.Left:
+                    // 左
+                    args.push("--crop");
+                    args.push('1200:1140:155:170');
+                    break;
+                case exports.CropSide.Center:
+                    // 両目っぽく見えるようにクロップ
+                    args.push("-b25M --crop");
+                    args.push('1600:900:2017:510');
+                    break;
+                case exports.CropSide.Right:
+                    // 右
+                    args.push("--crop");
+                    args.push('1200:1140:2275:170');
+                    break;
+                default:
+                    break;
             }
         }
         if (this.needCapture) {

@@ -1,6 +1,7 @@
 import ExecControllerListener from "./ExecControllerListener";
 import OAL from "./OAL";
 import ScrcpySettings from './ScrcpySettings';
+import { CropSide } from './ScrcpySettings';
 
 // 外部アプリを管理するContorllerクラス
 export default class ExecController {
@@ -99,9 +100,9 @@ export default class ExecController {
         this.settings.isCrop = b;
     }
 
-    // 左をcropするか設定する
-    public setIsLeftCrop(b: boolean): void {
-        this.settings.isLeftCrop = b;
+    // cropする位置を設定する
+    public setCropSide(cs: CropSide): void {
+        this.settings.cropSide = cs;
     }
 
     // ミラーリング中か

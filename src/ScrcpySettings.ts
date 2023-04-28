@@ -1,3 +1,11 @@
+// Cropする位置のEnum・・・TypeScriptの列挙型は問題があるためオブジェクトリテラルで代替
+export const CropSide = {
+    Left: 0,
+    Center: 1,
+    Right: 2,
+} as const;
+export type CropSide = typeof CropSide[keyof typeof CropSide];
+
 // scrcpyの引数に渡す設定情報のクラス
 export default class ScrcpySettings {
 
@@ -7,8 +15,8 @@ export default class ScrcpySettings {
     public fps: number = 60;
     // Crop
     public isCrop: boolean = true;
-    // 左をcropするか
-    public isLeftCrop: boolean = true;
+    // cropする位置
+    public cropSide: CropSide = CropSide.Center;
     // 録画するか
     public needCapture: boolean = false;
     // 保存先
@@ -49,12 +57,24 @@ export default class ScrcpySettings {
         }
 
         if (this.isCrop) {
-            if (this.isLeftCrop) { // 左をcropするとき
-                args.push("-c")
-                args.push('1200:1140:1520:170');
-            } else { // 右をcropするとき
-                args.push("-c")
-                args.push('1200:1140:155:170');               
+            switch(this.cropSide){
+                case CropSide.Left:
+                    // 左
+                    args.push("--crop")
+                    args.push('1200:1140:155:170');
+                    break;
+                case CropSide.Center:
+                    // 両目っぽく見えるようにクロップ
+                    args.push("-b25M --crop")
+                    args.push('1600:900:2017:510');
+                    break;
+                case CropSide.Right:
+                    // 右
+                    args.push("--crop")
+                    args.push('1200:1140:2275:170');
+                    break;
+                default:
+                    break;
             }
         }
 

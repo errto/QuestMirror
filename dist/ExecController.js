@@ -114,9 +114,9 @@ var ExecController = /** @class */ (function () {
     ExecController.prototype.setIsCrop = function (b) {
         this.settings.isCrop = b;
     };
-    // 左をcropするか設定する
-    ExecController.prototype.setIsLeftCrop = function (b) {
-        this.settings.isLeftCrop = b;
+    // cropする位置を設定する
+    ExecController.prototype.setCropSide = function (cs) {
+        this.settings.cropSide = cs;
     };
     // ミラーリング中か
     ExecController.prototype.getIsMirroring = function () {
